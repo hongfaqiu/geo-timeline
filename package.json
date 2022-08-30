@@ -1,0 +1,48 @@
+{
+  "name": "geo-timeline",
+  "version": "1.0.0",
+  "description": "A D3.js-based geologic time line",
+  "type": "module",
+  "source": "src/index.ts",
+  "exports": "./lib/index.modern.js",
+  "main": "./lib/index.cjs",
+  "module": "./lib/index.module.js",
+  "unpkg": "./lib/index.umd.js",
+  "scripts": {
+    "build": "microbundle",
+    "dev": "microbundle -f esm watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hongfaqiu/geo-timeline.git"
+  },
+  "keywords": [
+    "d3",
+    "geologic",
+    "timeline"
+  ],
+  "author": "hongfaqiu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hongfaqiu/geo-timeline/issues"
+  },
+  "homepage": "https://github.com/hongfaqiu/geo-timeline#readme",
+  "devDependencies": {
+    "@types/d3": "^7.4.0",
+    "@types/d3-axis": "^3.0.1",
+    "@types/d3-drag": "^3.0.1",
+    "@types/d3-hierarchy": "^3.1.0",
+    "@types/d3-selection": "^3.0.3",
+    "@types/d3-transition": "^3.0.2",
+    "@types/d3-zoom": "^3.0.1",
+    "d3": "^7.6.1",
+    "d3-axis": "^3.0.0",
+    "d3-drag": "^3.0.0",
+    "d3-hierarchy": "^3.1.2",
+    "d3-selection": "^3.0.0",
+    "d3-transition": "^3.0.1",
+    "d3-zoom": "^3.0.0",
+    "microbundle": "^0.15.1"
+  }
+}
