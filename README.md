@@ -70,4 +70,4 @@ interface GeoTimeLineOptions {
 
 ## Demo
 
-Lunch [index.html](./example/index.html) with node server, if use VS Code, suggest the ``Live Server`` extension.
+Lunch [index.html](index.html) with node server, if use VS Code, suggest the ``Live Server`` extension.
