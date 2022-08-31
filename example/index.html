@@ -30,6 +30,9 @@
     </a>
   </h1>
   <h2>Full width</h2>
+  <h3>Time: <label id="time1">0</label> Ma </h3>
+  <h3>Go to: <Input id="input" placeholder="0" /></h3>
+  
   <div id="geoTimeFullWidth"></div>
 
   <h2>Custom width & height (500px by 100px)</h2>
@@ -39,10 +42,20 @@
   <script type="module">
     import GeoTimeLine from "../lib/index.module.js";
 
-    new GeoTimeLine("#geoTimeFullWidth");
+    const geoTimeLine = new GeoTimeLine("#geoTimeFullWidth", {
+      time: 0,
+      onChange: (val) => {
+        document.getElementById('time1').innerHTML = +val.toFixed(6)
+      }
+    });
+
+    const Input = document.getElementById('input')
+    Input.onchange = function changeTime() {
+      geoTimeLine.time = this.value
+    }
+
     new GeoTimeLine("#geoTimeSmall", { width: 500, height: 100 });
   </script>
-  <!-- <script src="dist/index.umd.js"></script> -->
 </body>
 
 </html>

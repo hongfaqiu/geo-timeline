@@ -1,6 +1,6 @@
 import intervals from './GTS_2020.json'
 import * as d3 from 'd3'
-import { drag, interval, partition, stratify, ZoomTransform } from 'd3';
+import { D3DragEvent, drag, DragBehavior, interval, partition, stratify, ZoomTransform } from 'd3';
 
 type IntervalItem = {
   id: number;
@@ -22,8 +22,8 @@ interface GeoTimeLineOptions {
   neighborWidth?: number;
   fontSize?: number;
   fontFamily?: string;
-  onChange?: (time: number, stage: string[]) => void;
-  onAfterChange?: (time: number, stage: string[]) => void;
+  onChange?: (time: number, stage?: string[]) => void;
+  onAfterChange?: (time: number, stage?: string[]) => void;
   intervals?: IntervalItem[];
   margin?: {
     top?: number;
@@ -31,6 +31,13 @@ interface GeoTimeLineOptions {
     left?: number;
     right?: number;
   }
+  padding?: {
+    top?: number;
+    bottom?: number;
+    left?: number;
+    right?: number;
+  }
+  time?: number;
 }
 
 type CursorPos = {
@@ -53,6 +60,16 @@ export default class GeoTimeLine {
   root: d3.HierarchyRectangularNode<IntervalItem>;
   minWidthItemInLevel: any;
   minIntervals: { [key: number]: number; };
+  private _time: number;
+  private _timeLength: number;
+  private _scaleRadio: number;
+  private _scaleVal: number;
+  private _level: number;
+  private _startTime: number;
+  private _endTime: number;
+  private _handle: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
+  private _zoomedScale: d3.ScaleLinear<number, number, never>;
+  private _onChange: (time: number, stage?: string[]) => void;
 
   /**
    * Create a GeoTimeLine
@@ -74,11 +91,18 @@ export default class GeoTimeLine {
         top: 20, right: 20, bottom: 30, left: 30,
         ...options.margin
       },
+      padding: {
+        top: 20, right: 20, bottom: 30, left: 30,
+        ...options.padding
+      },
+      time: 0,
       ...options
     }
     this._width = opts.width
     this._height = opts.height
     this._options = opts
+    this._time = opts.time
+    this._onChange = opts.onChange
 
     this.font = `${opts.fontSize}px ${opts.fontFamily}`;
     
@@ -93,6 +117,13 @@ export default class GeoTimeLine {
       .size([opts.width, (opts.height - opts.margin.bottom) * this.maxLevel])
       .padding(0)(this.hierarchicalData);
     
+    this._startTime = this.root.data.start
+    this._endTime = this.root.data.end
+    this._timeLength = Math.abs(this._startTime - this._endTime)
+    this._scaleRadio = this._width / this._timeLength
+    this._scaleVal = (this._timeLength - this._time)
+    this._level = 1
+
     this.svg = d3.select(selector)
       .append("svg")
       .attr("viewBox", [0, 0, opts.width, opts.height])
@@ -104,6 +135,16 @@ export default class GeoTimeLine {
     this.intervals = opts.intervals
 
     this.init()
+  }
+
+  /** get or set time */
+  get time() {
+    return this._time
+  }
+
+  set time(val: number) {
+    if (this.setTime(val))
+      this._time = val
   }
 
   getMinIntervalAllLeveles(data: IntervalItem[]) {
@@ -123,100 +164,46 @@ export default class GeoTimeLine {
   }
   
   init() {
-    const { width, height, margin, neighborWidth } = this._options
-    const font = this.font
-    const svg = this.svg
-    const data = this.intervals
     const self = this
-    let level = 1
-    const startTime = this.root.data.start
-    const endTime = this.root.data.end
+    const { width } = self._options
+    const svg = self.svg
+    const startTime = self.root.data.start
+    const endTime = self.root.data.end
     const timeLength = startTime - endTime
-    let nowTime = startTime - timeLength / 2
-    let transformX = 0
 
     // draw cells
-    const globalScale = width / timeLength
-
-    const g = svg.append('g')
-      .attr('y', margin.top)
-      .attr('x', margin.left)
-      .attr('cursor', 'grab')
-
-    const handleHeight = height - margin.top - margin.bottom
-    const cellGroup = g.append("g").attr("id", "cells");
-    const rect = cellGroup
-      .selectAll('rect')
-      .data(data)
-      .join('rect')
-      .attr('x', d => timeLength - d.start)
-      .attr('width', d => d.start  - d.end)
-      .attr('height', handleHeight)
-      .attr('fill', d => d.color)
+    const cellGroup = svg.append("g").attr("id", "cells");
+    const rect = self._drawRect(cellGroup)
     
-    // drag handle
-    let handleX = width / 2
-    const angleHeight = handleHeight / 4
-    const handle = svg.append('g')
-
-    handle.append('line')
-      .attr("x1", 0)
-      .attr("y1", 0)
-      .attr("x2", 0)
-      .attr("y2", handleHeight)
-      .attr("stroke", "#FC4C02")
-      .attr("stroke-width", 2)
-      .attr("cursor", "ew-resize")
-
-    handle.append('path')
-      .attr("fill", 'red')
-      .attr('d', `M 0 0 L ${angleHeight} 0 L${angleHeight / 2} ${angleHeight} Z`)
-      .attr("transform", `translate(${-angleHeight / 2}, 0)`)
-
-    handle.append('path')
-      .attr("fill", 'red')
-      .attr('d', `M 0 0 L ${angleHeight} 0 L${angleHeight / 2} ${-angleHeight} Z`)
-      .attr("transform", `translate(${-angleHeight / 2}, ${handleHeight})`)
-
-    handle
-      .call(drag()
-        .on("drag", dragged))
-
     // draw axis 
     const xAxis = d3
       .scaleLinear()
-      .domain([0, timeLength])
+      .domain([self._endTime, self._startTime])
       .range([0, width])
 
     const axis = svg.append('g')
+
+    self._zoomedScale = xAxis.copy();
+    self._drawScale(axis, xAxis)
+
+    // drag handle
+    self._handle = self._drawHandle(svg)
+    self._handle
+      .call(drag()
+        .on("drag", dragged)
+        .on("end", () => {
+          self._handle.attr("cursor", "grab");
+        }))
     
-    let zoomedScale = xAxis.copy();
-
-    function setHandle(time: number) {
-      handleX = transformX / (timeLength * level) * width + (startTime - time) / timeLength * width
-      handle.attr("transform", `translate(${handleX}, 0)`)
-    }
-
-    function getTimeByPos(x: number) {
-      const time = transformX / (timeLength * level) * width * timeLength + x / width * timeLength
-      return time
-    }
-
-    const rectVisible = (d: IntervalItem) => {
-      const data = this.hierarchicalData.find(item => +item.id === d.id)
-      const dataLevel = (data.data.level ?? 0)
-      return (dataLevel === ~~level || ((data.children ?? []).length === 0 && dataLevel < level)) ? 1 : 0
-    }
-
-    function dragged(e: CursorPos) {
-      handleX += e.dx
-      handle.attr("transform", `translate(${handleX}, 0)`)
-      nowTime = getTimeByPos(handleX)
+    function dragged(e: D3DragEvent<Element, unknown, unknown>) {
+      self._changeHandlePos(self._zoomedScale, self._handle, self._zoomedScale(self._scaleVal / scaleRadio) + e.dx)
+      self._handle.attr("cursor", "grabbing")
     }
     
+    // zoom function
     const extent: [[number, number], [number, number]] = [[0, 0], [width, 0]]
     const scaleRadio = width / timeLength
-    const scaleExtent: [number, number] = [scaleRadio, this.maxLevel * scaleRadio]
+    const scaleExtent: [number, number] = [scaleRadio, self.maxLevel * scaleRadio]
     const translateExtent: [[number, number], [number, number]] = [[0, 0], [timeLength, 0]]
 
     const zoom = d3.zoom()
@@ -227,72 +214,169 @@ export default class GeoTimeLine {
     
     function zoomed(e) {
       const transform: ZoomTransform = e.transform
-      const { k, x, y } = transform
+      const { k, x } = transform
 
-      const minInterval = self.minIntervals[1]
-      const lastLevel = ~~(k * timeLength / width)
-      const nowLevel = k * timeLength / width
-      const nextLevel = lastLevel + 1
-      const lastZoom = minInterval / self.minIntervals[lastLevel]
-      const nextZoom = minInterval / self.minIntervals[nextLevel]
-      const radio = ((nextZoom - lastZoom) * (nowLevel - ~~nowLevel) + lastZoom)
-      
-      const newx = x - ((k * radio - k) * width)
       cellGroup.attr('transform', 'translate(' + x + ' 0) scale(' + (k) + ' 1)')
-      transformX = newx
-      level = nowLevel
-      // setHandle(nowTime)
+      
+      self._level = k * timeLength / width
 
-      rect
-        .transition()
-        .style('display', d => rectVisible(d) ? 'block' : 'none')
+      self._updateRectVisible(rect, self._level)
         
-      zoomedScale = transform.rescaleX(xAxis);
-      drawScale(zoomedScale);
+      self._zoomedScale = transform.rescaleX(xAxis);
+      self._drawScale(axis, self._zoomedScale);
 
-      handleX = zoomedScale(nowTime / scaleRadio)
-      handle.attr("transform", `translate(${handleX}, 0)`)
-
+      self._changeHandlePos(self._zoomedScale, self._handle, self._zoomedScale(self._scaleVal / scaleRadio))
     }
 
     svg.call(zoom)
-    svg.call(zoom.scaleBy, globalScale)
-
-    function drawScale(scale: d3.ScaleLinear<number, number, never>) {
-      axis.selectAll("g").remove();
-
-      let axisGroup = axis
-        .append("g")
-        .attr("class", "axisSegment");
-      
-      let axisGenerator = d3
-        .axisBottom(scale)
-        .ticks(4)
-        .tickFormat(d => {
-          const time = timeLength - +d * scaleRadio
-          return time + 'Ma'
-        })
-        .tickSizeInner(height - margin.top - margin.bottom)
-        .tickSizeOuter(0);
-      axisGenerator(axisGroup);
-
-      function addTicks(tickArg, length) {
-        axisGroup
-          .selectAll(".tick")
-          .data(scale.ticks(tickArg), (d: any) => d)
-          .enter()
-          .append("line")
-          .attr("class", "tick")
-          .attr("stroke", "currentColor")
-          .attr("y1", 0)
-          .attr("y2", length || 8)
-          .attr("x1", scale)
-          .attr("x2", scale);
-      }
-
-      addTicks(12, 20);
-      addTicks(100, 8);
+    svg.call(zoom.scaleBy, self._scaleRadio)
+      .on("click", chooseTime);
+    
+    function chooseTime(e: PointerEvent) {
+      const x = d3.pointer(e)[0]
+      self._changeHandlePos(self._zoomedScale, self._handle, x)
     }
+    
+  }
+
+  /**
+   * draw handle
+   * @param svg 
+   * @returns 
+   */
+  private _drawHandle(svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>) {
+    const handle = svg
+      .append('g')
+      .attr("cursor", 'grab')
+
+    let handleShape =
+      "M0 0 l 15 20 v 18 q 0 5 -5 5 h -20 q -5 0 -5 -5 v -18 l 15 -20";
+    handle
+      .append("path")
+      .attr("fill", "#ccc")
+      .attr("fill-opacity", "0.85")
+      .attr("stroke", "#333")
+      .attr("stroke-width", "1px")
+      .attr("d", handleShape);
+
+    // Add stripes for texture
+    function addStripe(x) {
+      handle
+        .append("rect")
+        .attr("fill", "#515151")
+        .attr("width", "3")
+        .attr("height", "16")
+        .attr("x", x)
+        .attr("y", "21");
+    }
+
+    addStripe(-7.5);
+    addStripe(-1.5);
+    addStripe(4.5);
+
+    return handle
+  }
+
+  /**
+   * draw rect
+   */
+  private _drawRect(cellGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>) {
+    return cellGroup
+      .selectAll('rect')
+      .data(this.intervals)
+      .join('rect')
+      .attr('x', d => this._timeLength - d.start)
+      .attr('width', d => d.start - d.end)
+      .attr('height', this._height - this._options.margin.bottom)
+      .attr('fill', d => d.color)
+  }
+
+  /** draw axis scale */
+  private _drawScale(axis: d3.Selection<SVGGElement, unknown, HTMLElement, any>, scale: d3.ScaleLinear<number, number, never>) {
+    axis.selectAll("g").remove();
+
+    let axisGroup = axis
+      .append("g")
+      .attr("class", "axisSegment");
+
+    let axisGenerator = d3
+      .axisBottom(scale)
+      .ticks(4)
+      .tickFormat(d => {
+        const time = this._timeLength - +d * this._scaleRadio
+        return time + 'Ma'
+      })
+      .tickSizeInner(this._height - this._options.margin.top - this._options.margin.bottom)
+      .tickSizeOuter(0);
+    axisGenerator(axisGroup);
+
+    function addTicks(count: number, length: number) {
+      axisGroup
+        .selectAll(".tick")
+        .data(scale.ticks(count), (d: any) => d)
+        .enter()
+        .append("line")
+        .attr("class", "tick")
+        .attr("stroke", "currentColor")
+        .attr("y1", 0)
+        .attr("y2", length || 8)
+        .attr("x1", scale)
+        .attr("x2", scale);
+    }
+
+    addTicks(6, 20);
+    addTicks(50, 8);
+  }
+
+  /** update rect's visible by level */
+  private _updateRectVisible(rect: d3.Selection<d3.BaseType | SVGRectElement, IntervalItem, SVGGElement, unknown>, level: number) {
+    rect
+      .transition()
+      .style('display', d => {
+        const data = this.hierarchicalData.find(item => +item.id === d.id)
+        const dataLevel = (data.data.level ?? 0)
+        return (dataLevel === ~~level || ((data.children ?? []).length === 0 && dataLevel < level)) ? 'block' : 'none'
+      })
+  }
+
+  /**
+   * set time and update handle's position
+   * @param {boolean} time
+   * @return {boolean} success or not
+   */
+  setTime(time: number): boolean {
+    if (!this._handle || !this._zoomedScale) {
+      throw Error(`svg initial uncomplete`)
+    }
+
+    const minTime = Math.min(this._endTime, this._startTime)
+    const maxTime = Math.max(this._endTime, this._startTime)
+    if (time < minTime || time > maxTime) {
+      throw Error(`Time value out of range: [${minTime}, ${maxTime}]`)
+    }
+    
+    const newx = this._zoomedScale((this._timeLength - time) / this._scaleRadio)
+    return this._changeHandlePos(this._zoomedScale, this._handle, newx)
+  }
+
+  /**
+   * change handle's position and update time
+   * @param zoomedScale 
+   * @param handle 
+   * @param x mouse x position offset svg
+   * @returns update success or not
+   */
+  private _changeHandlePos(zoomedScale: d3.ScaleLinear<number, number, never>, handle: d3.Selection<SVGGElement, unknown, HTMLElement, any>, x: number): boolean {
+    const scaleX = zoomedScale.invert(x) * this._scaleRadio
+    if (scaleX < 0 || scaleX > this._timeLength) return false
+    
+    handle.attr("transform", `translate(${x}, 0)`)
+    this._scaleVal = scaleX
+    this._time = this._timeLength - this._scaleVal
+    if (this._onChange) {
+      this._onChange(this._time)
+    }
+    return true
   }
 
 }
