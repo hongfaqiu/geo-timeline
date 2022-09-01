@@ -30,8 +30,8 @@
     </a>
   </h1>
   <h2>Full width</h2>
-  <h3>Time: <label id="time1">0</label> Ma </h3>
-  <h3>Go to: <Input id="input" placeholder="0" /></h3>
+  <h3>Time: <Input id="time" placeholder="0" /> Ma</h3>
+  <h3>Level: <Input id="level" placeholder="0" /> </h3>
   
   <div id="geoTimeFullWidth"></div>
 
@@ -44,14 +44,21 @@
 
     const geoTimeLine = new GeoTimeLine("#geoTimeFullWidth", {
       time: 0,
-      onChange: (val) => {
-        document.getElementById('time1').innerHTML = +val.toFixed(6)
+      onChange: (time, level) => {
+        console.log('time:', time, 'level:', level)
+        document.getElementById('time').value = +(+time).toFixed(6)
+        document.getElementById('level').value = +(+level).toFixed(6)
       }
     });
 
-    const Input = document.getElementById('input')
-    Input.onchange = function changeTime() {
+    const TimeInput = document.getElementById('time')
+    const LevelInput = document.getElementById('level')
+    TimeInput.onchange = function changeTime() {
       geoTimeLine.time = this.value
+    }
+
+    LevelInput.onchange = function changeTime() {
+      geoTimeLine.level = this.value
     }
 
     new GeoTimeLine("#geoTimeSmall", { width: 500, height: 100 });
