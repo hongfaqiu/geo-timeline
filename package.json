@@ -29,6 +29,8 @@
   },
   "homepage": "https://github.com/hongfaqiu/geo-timeline#readme",
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.1",
+    "@semantic-release/git": "^10.0.1",
     "@types/d3": "^7.4.0",
     "@types/d3-axis": "^3.0.1",
     "@types/d3-drag": "^3.0.1",
@@ -37,7 +39,8 @@
     "@types/d3-transition": "^3.0.2",
     "@types/d3-zoom": "^3.0.1",
     "d3": "^7.6.1",
-    "microbundle": "^0.15.1"
+    "microbundle": "^0.15.1",
+    "semantic-release": "^19.0.5"
   },
   "files": [
     "lib",

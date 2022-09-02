@@ -1,14 +1,30 @@
 # geo-timeline
 
-A D3.js(v7) based geologic time line
+A D3.js(v7) based geologic timeline
+
 ![geo-timeline](img/geo-timeline.png)
+
+- ``Zoom:`` Use the mouse wheel to control zoom, double-click to zoom in.
+- ``Adjustment:`` Hold down the left button to drag the timeline.
+- ``Positioning:`` Left click the timeline to move the handler quickly, or drag to move the handler.
 
 ## Install
 
-The module is under development
+For node.js
 
 ```bash
+#npm
+npm install --save geo-timeline
+#yarn
+yarn add geo-timeline
+```
 
+Or in a browser
+
+```html
+<head>
+  <script src="//unpkg.com/geo-timeline@latest"></script>
+</head>
 ```
 
 ### Usage
@@ -33,12 +49,12 @@ class GeoTimeLine {
    * @param selector CSS selector string
    * @param {number} [options.width] svg width, defaults to container's width
    * @param {number} [options.height = 70] svg height, defaults to 100px
-   * @param {number} [options.fontSize = 12] font size, defaults to 12px
-   * @param {string} [options.fontFamily = 12] font family, defaults to 'sans-serif'
+   * @param {number} [options.fontSize = 16] font size, defaults to 16px
+   * @param {string} [options.fontFamily = 'sans-serif'] font family, defaults to 'sans-serif'
    * @param {Function} [options.onChange] callback when handle's position or scale level changed
    * @param {IntervalItem[]} [options.intervals] geo time intervals array
-   * @param {Object} [options.margin] svg margin
-   * @param {Object} [options.padding] svg padding
+   * @param {Object} [options.margin] svg margin, defaults to { top: 0, right: 0, bottom: 0, left: 0 }
+   * @param {Object} [options.padding] svg padding, defaults to { top: 0, right: 0, bottom: 0, left: 0 }
    * @param {number} [options.time = 0] initial time, defaults to 0
    * @param {number} [options.transition = 450] animation time, defaults to 450ms
    */
@@ -49,22 +65,6 @@ class GeoTimeLine {
   /** get or set level */
   get level(): number;
   set level(val: number);
-  /**
-   * input target x and level, reset svg
-   * @param {number} [t.x = 0] target x, defaults 0
-   * @param {number} [t.k] target level, defaults now level
-   * @return {boolean} transform success or not
-   */
-  transform(t: {
-      x?: number;
-      k?: number;
-  }): boolean;
-  /**
-   * set time and update handle's position
-   * @param {boolean} time
-   * @return {boolean} success or not
-   */
-  setTime(time: number): boolean;
 }
 
 interface GeoTimeLineOptions {
@@ -72,18 +72,26 @@ interface GeoTimeLineOptions {
   width?: number;
   /** svg height, defaults to 70 */
   height?: number;
+  /** font size, defaults to 16px */
   fontSize?: number;
+  /** font family, defaults to 'sans-serif' */
   fontFamily?: string;
   /** callback when handle's position or scale level changed */
   onChange?: (time: number, level: number) => void;
   /** geo time intervals array */
   intervals?: IntervalItem[];
+  /** defaults to {
+    top: 0, right: 0, bottom: 0, left: 0,
+  } */
   margin?: {
     top?: number;
     bottom?: number;
     left?: number;
     right?: number;
   }
+  /** defaults to {
+    top: 0, right: 0, bottom: 0, left: 0,
+  } */
   padding?: {
     top?: number;
     bottom?: number;
@@ -112,6 +120,22 @@ type IntervalItem = {
 
 ```
 
+## Custom data
+
+The interval item's schema like follow:
+
+```json
+{
+  "id": 753,
+  "name": "Archean",
+  "level": 1,
+  "parentId": 0,
+  "color": "#F0047F",
+  "end": 2500,
+  "start": 4000
+}
+```
+
 ## Demo
 
 [Online demo](https://geo-timeline.vercel.app/)
@@ -125,3 +149,7 @@ npm run dev
 ```
 
 And then Launch [index.html](index.html) with node server, if use VS Code, suggest the ``Live Server`` extension.
+
+## Credit
+
+<https://github.com/UW-Macrostrat/geo-timescale>

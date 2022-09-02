@@ -1,5 +1,5 @@
 import intervals from './GTS_2020.json'
-import { D3DragEvent, drag, partition, pointer, stratify, Selection, ZoomTransform, select, scaleLinear, zoom as d3zoom, axisBottom, BaseType, zoomIdentity, transition, ScaleLinear, HierarchyNode, HierarchyRectangularNode, Transition } from 'd3';
+import { D3DragEvent, drag, partition, pointer, stratify, Selection, ZoomTransform, select, scaleLinear, zoom as d3zoom, axisBottom, BaseType, zoomIdentity, transition, ScaleLinear, HierarchyNode, HierarchyRectangularNode, Transition, ZoomBehavior } from 'd3';
 import { GeoTimeLineOptions, IntervalItem } from './typing';
 
 const DefaultOpts: Required<GeoTimeLineOptions> = {
@@ -54,18 +54,19 @@ export default class GeoTimeLine {
   private _minZoom: number;
   private _maxZoom: number;
   private _zoomHeight: number;
+  private _zoom: ZoomBehavior<Element, unknown>;
 
   /**
    * Create a GeoTimeLine
    * @param selector CSS selector string
    * @param {number} [options.width] svg width, defaults to container's width
    * @param {number} [options.height = 70] svg height, defaults to 100px
-   * @param {number} [options.fontSize = 12] font size, defaults to 12px
-   * @param {string} [options.fontFamily = 12] font family, defaults to 'sans-serif'
+   * @param {number} [options.fontSize = 16] font size, defaults to 16px
+   * @param {string} [options.fontFamily = 'sans-serif'] font family, defaults to 'sans-serif'
    * @param {Function} [options.onChange] callback when handle's position or scale level changed
    * @param {IntervalItem[]} [options.intervals] geo time intervals array
-   * @param {Object} [options.margin] svg margin
-   * @param {Object} [options.padding] svg padding
+   * @param {Object} [options.margin] svg margin, defaults to { top: 0, right: 0, bottom: 0, left: 0 }
+   * @param {Object} [options.padding] svg padding, defaults to { top: 0, right: 0, bottom: 0, left: 0 }
    * @param {number} [options.time = 0] initial time, defaults to 0
    * @param {number} [options.transition = 450] animation time, defaults to 450ms
    */
@@ -127,7 +128,7 @@ export default class GeoTimeLine {
     this.intervals = opts.intervals
     this._ready = false
 
-    this.init()
+    this._init()
   }
 
   /** get or set time */
@@ -136,7 +137,7 @@ export default class GeoTimeLine {
   }
 
   set time(val: number) {
-    if (this.setTime(val))
+    if (this._setTime(val))
       this._time = val
   }
 
@@ -146,10 +147,10 @@ export default class GeoTimeLine {
   }
 
   set level(val: number) {
-    if (this.transform({
-      k: val
-    }))
-      this._level = val
+    let level = val
+    if (val < this._minZoom) level = this._minZoom
+    if (val > this._maxZoom) level = this._maxZoom
+    this._zoom.scaleTo(this.svg, level)
   }
 
   getMinIntervalAllLeveles(data: IntervalItem[]) {
@@ -168,7 +169,7 @@ export default class GeoTimeLine {
     return obj
   }
   
-  init() {
+  private _init() {
     const self = this
     const { width, height, margin, padding } = self._options
     const svg = self.svg
@@ -227,7 +228,7 @@ export default class GeoTimeLine {
     const scaleExtent: [number, number] = [self._minZoom, self._maxZoom]
     const translateExtent: [[number, number], [number, number]] = [[0, 0], [timeLength * self._scaleRadio, 0]]
 
-    const zoom = d3zoom()
+    self._zoom = d3zoom()
       .extent(extent)
       .scaleExtent(scaleExtent)
       .translateExtent(translateExtent)
@@ -243,11 +244,11 @@ export default class GeoTimeLine {
         self._cellGroup.attr("cursor", "grabbing");
       }
 
-      self.transform(transform)
+      self._transform(transform)
     }
 
-    svg.call(zoom)
-    svg.call(zoom.scaleBy, self._scaleRadio)
+    svg.call(self._zoom)
+    svg.call(self._zoom.scaleBy, self._scaleRadio)
       .on("click", chooseTime);
     
     function chooseTime(e: PointerEvent) {
@@ -362,20 +363,13 @@ export default class GeoTimeLine {
   }
 
   /**
-   * input target x and level, reset svg
-   * @param {number} [t.x = 0] target x, defaults 0 
-   * @param {number} [t.k] target level, defaults now level 
-   * @return {boolean} transform success or not 
+   * reset svg by transform
    */
-  transform(t: {
-    x?: number,
-    k?: number
-  }): boolean {
+  private _transform(transform: ZoomTransform): boolean {
     if (!this._ready) {
       throw Error(`svg initial uncomplete`)
     }
-    
-    const transform = zoomIdentity.translate(t.x ?? 0, 0).scale(t.k ?? this._level)
+
     const { k, x } = transform
     const trans = transition().duration((this._level !== k && k > this._minZoom && k < this._maxZoom) ? this._options.transition : 0)
 
@@ -441,7 +435,7 @@ export default class GeoTimeLine {
    * @param {boolean} time
    * @return {boolean} success or not
    */
-  setTime(time: number): boolean {
+  private _setTime(time: number): boolean {
     if (!this._ready) {
       throw Error(`svg initial uncomplete`)
     }
