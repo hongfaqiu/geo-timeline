@@ -22,22 +22,29 @@ yarn add @zjugis/geo-timeline
 Or in a browser
 
 ```html
-<head>
-  <script src="//unpkg.com/@zjugis/geo-timeline@latest"></script>
-</head>
+<script src="//unpkg.com/@zjugis/geo-timeline@latest"></script>
 ```
 
 ### Usage
 
-```ts
-import GeoTimeLine from "../lib/index.module.js";
+For node.js
 
-const geoTimeLine = new GeoTimeLine("#geoTimeFullWidth", {
+```ts
+import GeoTimeLine from "@zjugis/geo-timeline";
+
+const geoTimeLine = new GeoTimeLine("#geoTimeContainer", {
   time: 0,
   onChange: function(time, level) {
     console.log(time, level)
   }
 });
+```
+
+Or in a browser
+
+```js
+
+const timeLine = new geoTimeLine("#geoTimeContainer");
 ```
 
 ### API
