@@ -14,16 +14,16 @@ For node.js
 
 ```bash
 #npm
-npm install --save geo-timeline
+npm install --save @zjugis/geo-timeline
 #yarn
-yarn add geo-timeline
+yarn add @zjugis/geo-timeline
 ```
 
 Or in a browser
 
 ```html
 <head>
-  <script src="//unpkg.com/geo-timeline@latest"></script>
+  <script src="//unpkg.com/@zjugis/geo-timeline@latest"></script>
 </head>
 ```
 

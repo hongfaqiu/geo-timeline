@@ -1,6 +1,7 @@
 {
-  "name": "geo-timeline",
+  "name": "@zjugis/geo-timeline",
   "version": "1.0.0",
+  "packageManager": "pnpm@7.9.0",
   "description": "A D3.js-based geologic time line",
   "type": "module",
   "source": "src/index.ts",
