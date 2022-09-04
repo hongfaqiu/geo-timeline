@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/hongfaqiu/geo-timeline/compare/v1.1.0...v1.1.1) (2022-09-04)
+
+
+### Bug Fixes
+
+* fix unequal distance scale handle position ([2b5e3e0](https://github.com/hongfaqiu/geo-timeline/commit/2b5e3e0b974cade2842dbe5addad3f88c2efaff4))
+
 # [1.1.0](https://github.com/hongfaqiu/geo-timeline/compare/v1.0.0...v1.1.0) (2022-09-04)
 
 
