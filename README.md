@@ -64,6 +64,7 @@ class GeoTimeLine {
    * @param {Object} [options.padding] svg padding, defaults to { top: 0, right: 0, bottom: 0, left: 0 }
    * @param {number} [options.time = 0] initial time, defaults to 0
    * @param {number} [options.transition = 450] animation time, defaults to 450ms
+   * @param {Function} [options.intervalSum] interval transform setting, defaults to (d) => d.leaf ? 1 : 0
    */
   constructor(selector: string, options?: GeoTimeLineOptions);
   /** get or set time */
@@ -108,7 +109,9 @@ interface GeoTimeLineOptions {
   /** initial time, defaults to 0 */
   time?: number;
   /** animation time, defaults to 450ms */
-  transition?: number
+  transition?: number;
+  /** interval transform setting, defaults to (d) => d.leaf ? 1 : 0 */
+  intervalSum?: (d: IntervalItem) => number
 }
 
 /** geo time data intervals schema **/

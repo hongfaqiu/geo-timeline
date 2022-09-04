@@ -1,3 +1,3 @@
-export { default } from './GeoTimeLine';
+import GeoTimeLine from "./GeoTimeLine";
 
-export * from './GeoTimeLine';
+export default GeoTimeLine

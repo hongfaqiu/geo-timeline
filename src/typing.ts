@@ -1,3 +1,5 @@
+import { HierarchyRectangularNode } from "d3";
+
 /** geo time data intervals schema **/
 export type IntervalItem = {
   id: number;
@@ -46,5 +48,15 @@ export interface GeoTimeLineOptions {
   /** initial time, defaults to 0 */
   time?: number;
   /** animation time, defaults to 450ms */
-  transition?: number
+  transition?: number;
+  /** interval transform setting, defaults to (d) => d.leaf ? 1 : 0 */
+  intervalSum?: (d: IntervalItem) => number
+}
+
+export type NodeItem = HierarchyRectangularNode<IntervalItem> & {
+  target?: {
+    x0: number;
+    x1: number
+  }
+  visible?: boolean
 }

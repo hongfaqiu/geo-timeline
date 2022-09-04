@@ -1,6 +1,6 @@
 import intervals from './GTS_2020.json'
 import { D3DragEvent, drag, partition, pointer, stratify, Selection, ZoomTransform, select, scaleLinear, zoom as d3zoom, axisBottom, BaseType, zoomIdentity, transition, ScaleLinear, HierarchyNode, HierarchyRectangularNode, Transition, ZoomBehavior } from 'd3';
-import { GeoTimeLineOptions, IntervalItem } from './typing';
+import { GeoTimeLineOptions, IntervalItem, NodeItem } from './typing';
 
 const DefaultOpts: Required<GeoTimeLineOptions> = {
   width: 960,
@@ -17,6 +17,7 @@ const DefaultOpts: Required<GeoTimeLineOptions> = {
   },
   time: 0,
   transition: 450,
+  intervalSum: (d) => d.leaf ? 1 : 0
 }
 
 export default class GeoTimeLine {
@@ -29,7 +30,7 @@ export default class GeoTimeLine {
   readonly svg: Selection<SVGSVGElement, unknown, HTMLElement, any>;
   readonly intervals: IntervalItem[];
   readonly hierarchicalData: HierarchyNode<IntervalItem>;
-  readonly root: HierarchyRectangularNode<IntervalItem>;
+  readonly root: NodeItem;
   minWidthItemInLevel: any;
   minIntervals: { [key: number]: number; };
   private _time: number;
@@ -42,19 +43,20 @@ export default class GeoTimeLine {
   private _handle: Selection<SVGGElement, unknown, HTMLElement, any>;
   private _zoomedScale: ScaleLinear<number, number, never>;
   private _onChange: (time: number, level: number) => void;
-  private _cell: Selection<BaseType | SVGGElement, IntervalItem, SVGGElement, unknown>;
-  private _rect: Selection<SVGRectElement, IntervalItem, SVGGElement, unknown>;
   private _ready: boolean;
-  private _text: Selection<SVGTextElement, IntervalItem, SVGGElement, unknown>;
   private _xAxis: any;
   private _cellGroup: Selection<SVGGElement, unknown, HTMLElement, any>;
   private _heightScale: number;
-  private _ticks: Selection<SVGGElement, IntervalItem, SVGGElement, unknown>;
   private _zoomWidth: number;
   private _minZoom: number;
   private _maxZoom: number;
   private _zoomHeight: number;
   private _zoom: ZoomBehavior<Element, unknown>;
+  private _interval: number;
+  private _cell: Selection<SVGGElement | BaseType, NodeItem, SVGGElement, unknown>;
+  private _rect: Selection<SVGRectElement, NodeItem, SVGGElement, unknown>;
+  private _text: Selection<SVGTextElement, NodeItem, SVGGElement, unknown>;
+  private _ticks: Selection<SVGGElement, NodeItem, SVGGElement, unknown>;
 
   /**
    * Create a GeoTimeLine
@@ -69,6 +71,7 @@ export default class GeoTimeLine {
    * @param {Object} [options.padding] svg padding, defaults to { top: 0, right: 0, bottom: 0, left: 0 }
    * @param {number} [options.time = 0] initial time, defaults to 0
    * @param {number} [options.transition = 450] animation time, defaults to 450ms
+   * @param {Function} [options.intervalSum] interval transform setting, defaults to (d) => d.leaf ? 1 : 0
    */
   constructor(selector: string, options: GeoTimeLineOptions = {}) {
     const opts: Required<GeoTimeLineOptions> = {
@@ -97,24 +100,30 @@ export default class GeoTimeLine {
 
     this.font = `${opts.fontSize}px ${opts.fontFamily}`;
     
-    this.hierarchicalData = stratify<IntervalItem>()(intervals).sum((d) =>
-      d.leaf ? d.start - d.end : 0
-    )
+    this.hierarchicalData = stratify<IntervalItem>()(intervals).sum(this._options.intervalSum)
 
     this.maxLevel = this.hierarchicalData.height
     this.minIntervals = this.getMinIntervalAllLeveles(intervals)
 
     this._minZoom = this._zoomWidth / (this._zoomWidth + padding.right + padding.left)
-    this._maxZoom = this.maxLevel + 1
-      
+    this._maxZoom = 10
+
     this.root = partition<IntervalItem>()
       .size([width, (height - opts.margin.bottom) * this.maxLevel])
-      .padding(0)(this.hierarchicalData);
+      .padding(0)(this.hierarchicalData)
+      
+    this.root.each(d => {
+      d.target = {
+        x0: d.x0,
+        x1: d.x1
+      }
+      d.visible = false
+    })
     
     this._startTime = this.root.data.start
     this._endTime = this.root.data.end
     this._timeLength = Math.abs(this._startTime - this._endTime)
-    this._scaleRadio = this._width / this._timeLength
+    this._scaleRadio = this._width / (this.root.x1 - this.root.x0)
     this._scaleVal = (this._timeLength - this._time)
 
     this.svg = select(selector)
@@ -185,7 +194,7 @@ export default class GeoTimeLine {
 
     self._cell = self._cellGroup
       .selectAll("g")
-      .data(self.intervals)
+      .data(self.root.descendants())
       .join("g")
     
     self._rect = self._drawRect(self._cell)
@@ -211,6 +220,7 @@ export default class GeoTimeLine {
         .on("drag", dragged)
         .on("end", () => {
           self._handle.attr("cursor", "grab");
+          clearInterval(self._interval)
         }))
     
     this._ready = true
@@ -226,7 +236,7 @@ export default class GeoTimeLine {
       [width - margin.right, height - margin.top]
     ]
     const scaleExtent: [number, number] = [self._minZoom, self._maxZoom]
-    const translateExtent: [[number, number], [number, number]] = [[0, 0], [timeLength * self._scaleRadio, 0]]
+    const translateExtent: [[number, number], [number, number]] = [[self.root.x0, 0], [self.root.x1, 0]]
 
     self._zoom = d3zoom()
       .extent(extent)
@@ -273,7 +283,7 @@ export default class GeoTimeLine {
     handle
       .append("path")
       .attr("fill", "#ccc")
-      .attr("fill-opacity", "0.85")
+      .attr("fill-opacity", 0.85)
       .attr("stroke", "#333")
       .attr("stroke-width", "1px")
       .attr("d", handleShape)
@@ -283,10 +293,10 @@ export default class GeoTimeLine {
       handle
         .append("rect")
         .attr("fill", "#515151")
-        .attr("width", "3")
-        .attr("height", "16")
+        .attr("width", 3)
+        .attr("height", 16)
         .attr("x", x)
-        .attr("y", "21");
+        .attr("y", 21);
     }
 
     addStripe(-7.5);
@@ -299,11 +309,11 @@ export default class GeoTimeLine {
   /**
    * draw rect
    */
-  private _drawRect(cell: Selection<BaseType, IntervalItem, SVGGElement, unknown>) {
+  private _drawRect(cell: typeof this._cell) {
     return cell
       .append("rect")
       .attr('height', this._zoomHeight)
-      .attr('fill', d => d.color)
+      .attr('fill', d => d.data.color)
   }
 
   private _getTextWidth(text: string, font: string) {
@@ -316,13 +326,13 @@ export default class GeoTimeLine {
   }
 
   /** draw text */
-  private _drawText(cell: Selection<BaseType, IntervalItem, SVGGElement, unknown>) {
+  private _drawText(cell: typeof this._cell) {
     const text = cell
       .append("text")
       .style("user-select", "none")
       .attr("pointer-events", "none")
       .attr("y", this._zoomHeight / 2)
-      .attr("fill", (d) => d.textColor ?? "black")
+      .attr("fill", (d) => d.data.textColor ?? "black")
       .attr("opacity", 0.8)
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle")
@@ -330,7 +340,7 @@ export default class GeoTimeLine {
     return text
   }
 
-  private _addTicks(cell: Selection<BaseType, IntervalItem, SVGGElement, unknown>) {
+  private _addTicks(cell: typeof this._cell) {
     const ticks = cell
       .append('g')
       .attr('id', 'tick')
@@ -350,9 +360,9 @@ export default class GeoTimeLine {
       .append("text")
       .attr("x", 0)
       .attr("y", y + this._options.fontSize)
-      .attr("font-size", (d) => `${1 - 0.05 * d.level}em`)
-      .text((d) => d.start + 'ma')
-      .attr("text-anchor", d => d.start === this._startTime ? 'start' : 'middle')
+      .attr("font-size", (d) => `${1 - 0.05 * d.data.level}em`)
+      .text((d) => d.data.start + 'ma')
+      .attr("text-anchor", d => d.data.start === this._startTime ? 'start' : 'middle')
       .clone(true)
       .lower()
       .attr("stroke-linejoin", "round")
@@ -370,46 +380,53 @@ export default class GeoTimeLine {
       throw Error(`svg initial uncomplete`)
     }
 
-    const { k, x } = transform
+    let { k, x } = transform
+
     const trans = transition().duration((this._level !== k && k > this._minZoom && k < this._maxZoom) ? this._options.transition : 0)
 
     if (this._level !== k) {
       const scale = k * this._scaleRadio
 
+      this.root.each(d => {
+        d.target = {
+          x0: d.x0 * scale,
+          x1: d.x1 * scale
+        }
+        const dataLevel = (d.data.level ?? 0)
+        d.visible = (dataLevel === ~~k || ((d.children ?? []).length === 0 && dataLevel < k))
+        
+        // if (this.minIntervals[~~k] && this.minIntervals[~~k] * scale)
+      })
+
       this._rect
         .transition(trans)
-        .attr('width', d => Math.abs(d.start - d.end) * scale)
-        .attr('x', d => (this._timeLength - d.start) * scale)
+        .attr('width', d => (d.target.x1 - d.target.x0))
+        .attr('x', d => (d.target.x0))
 
       this._text
         .transition(trans)
         .attr("x", (d) => {
-          const textX = (this._timeLength - d.start + Math.abs(d.start - d.end) / 2) * scale;
+          const textX = (d.target.x0 + (d.target.x1 - d.target.x0) / 2);
           return Number.isNaN(textX) ? 0 : textX;
         })
         .text((d) => {
-          const rectWidth = Math.abs(d.start - d.end) * scale;
-          const labelWidth = this._getTextWidth(d.name, this.font);
-          const abbrev = d.abbr || d.name.charAt(0);
+          const rectWidth = Math.abs(d.target.x1 - d.target.x0);
+          const labelWidth = this._getTextWidth(d.data.name, this.font);
+          const abbrev = d.data.abbr || d.data.name.charAt(0);
 
-          return rectWidth - 10 < labelWidth ? abbrev : d.name;
+          return rectWidth - 10 < labelWidth ? abbrev : d.data.name;
         });
       
       this._ticks
         .transition(trans)
         .attr("transform", (d) => {
-          const x = (this._timeLength - d.start) * scale
+          const x = (d.target.x0)
           return `translate(${x}, 0)`
         })
 
       this._cell
         .transition(trans)
-        .style('opacity', d => {
-          const nowLevel = Math.max(k, 1)
-          const data = this.hierarchicalData.find(item => +item.id === d.id)
-          const dataLevel = (data.data.level ?? 0)
-          return (dataLevel === ~~nowLevel || ((data.children ?? []).length === 0 && dataLevel < nowLevel)) ? 1 : 0
-        })
+        .style('opacity', d => d.visible ? 1 : 0)
       
       this._level = k
 
@@ -447,7 +464,9 @@ export default class GeoTimeLine {
     }
     
     const newx = this._zoomedScale(this._timeLength - time)
-    return this._changeHandlePos(this._zoomedScale, this._handle, newx)
+    const bool = this._changeHandlePos(this._zoomedScale, this._handle, newx)
+    this._zoom.translateTo(this.svg, newx, 0)
+    return bool
   }
 
   /**
