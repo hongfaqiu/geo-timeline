@@ -1,5 +1,5 @@
 import intervals from './GTS_2020.json'
-import { D3DragEvent, drag, partition, pointer, stratify, Selection, ZoomTransform, select, scaleLinear, zoom as d3zoom, axisBottom, BaseType, zoomIdentity, transition, ScaleLinear, HierarchyNode, HierarchyRectangularNode, Transition, ZoomBehavior } from 'd3';
+import { D3DragEvent, drag, partition, pointer, stratify, Selection, ZoomTransform, select, scaleLinear, zoom as d3zoom, BaseType, transition, ScaleLinear, HierarchyNode, Transition, ZoomBehavior } from 'd3';
 import { GeoTimeLineOptions, IntervalItem, NodeItem } from './typing';
 
 const DefaultOpts: Required<GeoTimeLineOptions> = {
@@ -462,10 +462,13 @@ export default class GeoTimeLine {
     if (time < minTime || time > maxTime) {
       throw Error(`Time value out of range: [${minTime}, ${maxTime}]`)
     }
-    
-    const newx = this._zoomedScale(this._timeLength - time)
+
+    const node = this.root.find(node => node.visible && node.data.start >= time && node.data.end <= time)
+    const xx = node.target.x0 + (node.target.x1 - node.target.x0) * (node.data.start - time) / (node.data.start - node.data.end)
+    const scaleX = xx / (this.root.target.x1 - this.root.target.x0) * this._timeLength
+    const newx = this._zoomedScale(scaleX)
+
     const bool = this._changeHandlePos(this._zoomedScale, this._handle, newx)
-    this._zoom.translateTo(this.svg, newx, 0)
     return bool
   }
 
@@ -477,14 +480,20 @@ export default class GeoTimeLine {
    * @returns update success or not
    */
   private _changeHandlePos(zoomedScale: ScaleLinear<number, number, never>, handle: Selection<SVGGElement, unknown, HTMLElement, any>, x: number, trans?: Transition<BaseType, unknown, null, undefined>): boolean {
-    const scaleX = zoomedScale.invert(x)
-    if (scaleX < 0 || scaleX > this._timeLength) return false
+    let scaleX = zoomedScale.invert(x)
+    if (scaleX < 0) scaleX = 0
+    if (scaleX > this._timeLength) scaleX = this._timeLength
     
     handle
       .transition(trans ?? transition().duration(0))
       .attr("transform", `translate(${x}, ${this._options.margin.top}), scale(${this._heightScale})`)
     this._scaleVal = scaleX
-    this._time = this._timeLength - this._scaleVal
+
+    const handleX = scaleX * this._width / this._timeLength
+
+    const node = this.root.find(node => node.visible && node.x0 <= handleX && node.x1 >= handleX)
+    this._time = (node.data.start - (node.data.start - node.data.end) * (handleX - node.x0 ) / (node.x1 - node.x0))
+
     if (this._onChange) {
       this._onChange(this._time, this._level)
     }
