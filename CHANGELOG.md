@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/hongfaqiu/geo-timeline/compare/v1.0.0...v1.1.0) (2022-09-04)
+
+
+### Features
+
+* add intervalSum params ([7edf678](https://github.com/hongfaqiu/geo-timeline/commit/7edf678563187263dd5bdab1c4e06d6bbf4cac91))
+
 # 1.0.0 (2022-09-02)
 
 
