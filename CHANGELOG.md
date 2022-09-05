@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/hongfaqiu/geo-timeline/compare/v1.2.0...v1.2.1) (2022-09-05)
+
+
+### Bug Fixes
+
+* fix time location ([324836c](https://github.com/hongfaqiu/geo-timeline/commit/324836cfc4cca7ba91dc6c5eb50ed4ae1d13e694))
+
 # [1.2.0](https://github.com/hongfaqiu/geo-timeline/compare/v1.1.1...v1.2.0) (2022-09-05)
 
 
