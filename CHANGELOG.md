@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/hongfaqiu/geo-timeline/compare/v1.3.0...v1.3.1) (2022-09-05)
+
+
+### Bug Fixes
+
+* umd export name as GeoTimeLine ([9df6428](https://github.com/hongfaqiu/geo-timeline/commit/9df6428db462109077b58112761ae6ccc75c7f72))
+
 # [1.3.0](https://github.com/hongfaqiu/geo-timeline/compare/v1.2.1...v1.3.0) (2022-09-05)
 
 
