@@ -10,7 +10,7 @@
   "module": "./lib/index.module.js",
   "unpkg": "./lib/index.umd.js",
   "scripts": {
-    "build": "microbundle",
+    "build": "microbundle --name GeoTimeLine",
     "dev": "microbundle -f esm watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

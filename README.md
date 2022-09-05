@@ -48,8 +48,7 @@ geoTimeLine.time = 2000
 Or in a browser
 
 ```js
-
-const timeLine = new geoTimeLine("#geoTimeContainer");
+const timeLine = new GeoTimeLine("#geoTimeContainer");
 ```
 
 ### API
