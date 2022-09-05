@@ -34,7 +34,7 @@ export default class GeoTimeLine {
   readonly hierarchicalData: HierarchyNode<IntervalItem>;
   /** the root hierarchical data */
   readonly root: NodeItem;
-  /** user options */
+  /** user input options */
   readonly options: GeoTimeLineOptions
   private _width: number;
   private _height: number;
@@ -49,6 +49,7 @@ export default class GeoTimeLine {
   private _handle: Selection<SVGGElement, unknown, HTMLElement, any>;
   private _zoomedScale: ScaleLinear<number, number, never>;
   private _onChange: (time: number, level: number) => void;
+  private _onAfterChange: (time: number, level: number) => void;
   private _ready: boolean;
   private _xAxis: any;
   private _cellGroup: Selection<SVGGElement, unknown, HTMLElement, any>;
@@ -100,7 +101,7 @@ export default class GeoTimeLine {
       width: +select(selector).style('width').split('px')[0],
       ...options
     }
-    const { width, height, margin, padding, intervalSum, onChange, time, transition } = opts
+    const { width, height, margin, padding, intervalSum, onChange, onAfterChange, time, transition } = opts
     this._width = width
     this._height = height
     this._margin = margin
@@ -110,6 +111,7 @@ export default class GeoTimeLine {
     this._zoomHeight = height - margin.top - margin.bottom
     this.transition = transition
     this._onChange = onChange
+    this._onAfterChange = onAfterChange
     this._time = time
     this.font = `${opts.fontSize}px ${opts.fontFamily}`
     this._minZoom = opts.minZoom = opts.minZoom ?? this._zoomWidth / (this._zoomWidth + padding.right + padding.left)
@@ -216,6 +218,7 @@ export default class GeoTimeLine {
         .on("end", () => {
           self._handle.attr("cursor", "grab");
           clearInterval(self._interval)
+          self._dispatchFunc(self._onAfterChange)
         }))
 
     function dragged(e: D3DragEvent<Element, unknown, unknown>) {
@@ -257,9 +260,16 @@ export default class GeoTimeLine {
     function chooseTime(e: PointerEvent) {
       const x = pointer(e)[0]
       self._changeHandlePos(self._zoomedScale, self._handle, x)
+      self._dispatchFunc(self._onAfterChange)
     }
-    this._ready = true
 
+    this._ready = true
+  }
+
+  private _dispatchFunc(func: undefined | ((time: number, level: number) => void)) {
+    if (func && this._ready) {
+      func(this._time, this._level)
+    }
   }
 
   /**
@@ -431,9 +441,9 @@ export default class GeoTimeLine {
       
       this._level = k
 
-      if (this._onChange && this._ready) {
-        this._onChange(this._time, this._level)
-      }
+      this._dispatchFunc(this._onChange)
+      this._dispatchFunc(this._onAfterChange)
+
     }
 
     this._cellGroup
@@ -502,9 +512,7 @@ export default class GeoTimeLine {
     
     if (time !== this._time) {
       this._time = time
-      if (this._onChange && this._ready) {
-        this._onChange(this._time, this._level)
-      }
+      this._dispatchFunc(this._onChange)
     }
 
     return true

@@ -32,6 +32,8 @@ export interface GeoTimeLineOptions {
   fontFamily?: string;
   /** callback when handle's position or scale level changed */
   onChange?: (time: number, level: number) => void;
+  /** dispatch when mouseup or zoom  */
+  onAfterChange?: (time: number, level: number) => void;
   /** geo time intervals array */
   intervals?: IntervalItem[];
   /** defaults to {
