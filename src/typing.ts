@@ -14,6 +14,13 @@ export type IntervalItem = {
   leaf?: boolean;
 }
 
+export type MarginOpts = {
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+}
+
 export interface GeoTimeLineOptions {
   /** svg width, defaults to container's width */
   width?: number;
@@ -30,27 +37,23 @@ export interface GeoTimeLineOptions {
   /** defaults to {
     top: 0, right: 0, bottom: 0, left: 0,
   } */
-  margin?: {
-    top?: number;
-    bottom?: number;
-    left?: number;
-    right?: number;
-  }
+  margin?: MarginOpts
   /** defaults to {
     top: 0, right: 0, bottom: 0, left: 0,
   } */
-  padding?: {
-    top?: number;
-    bottom?: number;
-    left?: number;
-    right?: number;
-  }
+  padding?: MarginOpts
   /** initial time, defaults to 0 */
   time?: number;
+  /** initial level, defaults to 1 */
+  level?: number;
   /** animation time, defaults to 450ms */
   transition?: number;
   /** interval transform setting, defaults to (d) => d.leaf ? 1 : 0 */
-  intervalSum?: (d: IntervalItem) => number
+  intervalSum?: (d: IntervalItem) => number;
+  /** min zoom level */
+  minZoom?: number;
+  /** max zoom level, defaults to 10 */
+  maxZoom?: number;
 }
 
 export type NodeItem = HierarchyRectangularNode<IntervalItem> & {

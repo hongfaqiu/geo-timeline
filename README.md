@@ -36,7 +36,9 @@ const geoTimeLine = new GeoTimeLine("#geoTimeContainer", {
   time: 0,
   onChange: function(time, level) {
     console.log(time, level)
-  }
+  },
+  // determin interval by time
+  intervalSum: d => d.leaf ? d.start - d.end : 0
 });
 ```
 
@@ -51,21 +53,6 @@ const timeLine = new geoTimeLine("#geoTimeContainer");
 
 ```ts
 class GeoTimeLine {
-  /**
-   * Create a GeoTimeLine
-   * @param selector CSS selector string
-   * @param {number} [options.width] svg width, defaults to container's width
-   * @param {number} [options.height = 70] svg height, defaults to 100px
-   * @param {number} [options.fontSize = 16] font size, defaults to 16px
-   * @param {string} [options.fontFamily = 'sans-serif'] font family, defaults to 'sans-serif'
-   * @param {Function} [options.onChange] callback when handle's position or scale level changed
-   * @param {IntervalItem[]} [options.intervals] geo time intervals array
-   * @param {Object} [options.margin] svg margin, defaults to { top: 0, right: 0, bottom: 0, left: 0 }
-   * @param {Object} [options.padding] svg padding, defaults to { top: 0, right: 0, bottom: 0, left: 0 }
-   * @param {number} [options.time = 0] initial time, defaults to 0
-   * @param {number} [options.transition = 450] animation time, defaults to 450ms
-   * @param {Function} [options.intervalSum] interval transform setting, defaults to (d) => d.leaf ? 1 : 0
-   */
   constructor(selector: string, options?: GeoTimeLineOptions);
   /** get or set time */
   get time(): number;
@@ -111,7 +98,11 @@ interface GeoTimeLineOptions {
   /** animation time, defaults to 450ms */
   transition?: number;
   /** interval transform setting, defaults to (d) => d.leaf ? 1 : 0 */
-  intervalSum?: (d: IntervalItem) => number
+  intervalSum?: (d: IntervalItem) => number;
+  /** min zoom level */
+  minZoom?: number;
+  /** max zoom level, defaults to 10 */
+  maxZoom?: number;
 }
 
 /** geo time data intervals schema **/

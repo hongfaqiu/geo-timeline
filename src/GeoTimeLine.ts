@@ -1,8 +1,8 @@
 import intervals from './GTS_2020.json'
 import { D3DragEvent, drag, partition, pointer, stratify, Selection, ZoomTransform, select, scaleLinear, zoom as d3zoom, BaseType, transition, ScaleLinear, HierarchyNode, Transition, ZoomBehavior } from 'd3';
-import { GeoTimeLineOptions, IntervalItem, NodeItem } from './typing';
+import { GeoTimeLineOptions, IntervalItem, MarginOpts, NodeItem } from './typing';
 
-const DefaultOpts: Required<GeoTimeLineOptions> = {
+const DefaultOpts: GeoTimeLineOptions = {
   width: 960,
   height: 70,
   fontSize: 16,
@@ -17,22 +17,21 @@ const DefaultOpts: Required<GeoTimeLineOptions> = {
   },
   time: 0,
   transition: 450,
-  intervalSum: (d) => d.leaf ? 1 : 0
+  intervalSum: (d) => d.leaf ? 1 : 0,
+  maxZoom: 10
 }
 
 export default class GeoTimeLine {
-  private _options: Required<GeoTimeLineOptions>
   readonly font: string;
-  private _width: number;
-  private _height: number;
-  private _canvas: HTMLCanvasElement;
   readonly maxLevel: number;
   readonly svg: Selection<SVGSVGElement, unknown, HTMLElement, any>;
   readonly intervals: IntervalItem[];
   readonly hierarchicalData: HierarchyNode<IntervalItem>;
   readonly root: NodeItem;
-  minWidthItemInLevel: any;
-  minIntervals: { [key: number]: number; };
+  readonly options: GeoTimeLineOptions
+  private _width: number;
+  private _height: number;
+  private _canvas: HTMLCanvasElement;
   private _time: number;
   private _timeLength: number;
   private _scaleRadio: number;
@@ -57,6 +56,9 @@ export default class GeoTimeLine {
   private _rect: Selection<SVGRectElement, NodeItem, SVGGElement, unknown>;
   private _text: Selection<SVGTextElement, NodeItem, SVGGElement, unknown>;
   private _ticks: Selection<SVGGElement, NodeItem, SVGGElement, unknown>;
+  private _margin: MarginOpts;
+  private _padding: MarginOpts;
+  transition: number;
 
   /**
    * Create a GeoTimeLine
@@ -72,9 +74,11 @@ export default class GeoTimeLine {
    * @param {number} [options.time = 0] initial time, defaults to 0
    * @param {number} [options.transition = 450] animation time, defaults to 450ms
    * @param {Function} [options.intervalSum] interval transform setting, defaults to (d) => d.leaf ? 1 : 0
+   * @param {number} [options.minZoom] min zoom level
+   * @param {number} [options.maxZoom] min zoom level, defaults to 10
    */
   constructor(selector: string, options: GeoTimeLineOptions = {}) {
-    const opts: Required<GeoTimeLineOptions> = {
+    const opts: GeoTimeLineOptions = {
       ...DefaultOpts,
       margin: {
         ...DefaultOpts.margin,
@@ -87,26 +91,27 @@ export default class GeoTimeLine {
       width: +select(selector).style('width').split('px')[0],
       ...options
     }
-    const { width, height, margin, padding } = opts
+    const { width, height, margin, padding, intervalSum, onChange, time, transition } = opts
     this._width = width
     this._height = height
+    this._margin = margin
+    this._padding = padding
     this._heightScale = height / DefaultOpts.height
     this._zoomWidth = width - margin.left - margin.right
     this._zoomHeight = height - margin.top - margin.bottom
+    this.transition = transition
+    this._onChange = onChange
+    this._time = time
+    this.font = `${opts.fontSize}px ${opts.fontFamily}`
+    this._minZoom = opts.minZoom = opts.minZoom ?? this._zoomWidth / (this._zoomWidth + padding.right + padding.left)
+    this._maxZoom = opts.maxZoom
+    this.intervals = opts.intervals
 
-    this._options = opts
-    this._time = opts.time
-    this._onChange = opts.onChange
-
-    this.font = `${opts.fontSize}px ${opts.fontFamily}`;
+    this.options = opts
     
-    this.hierarchicalData = stratify<IntervalItem>()(intervals).sum(this._options.intervalSum)
+    this.hierarchicalData = stratify<IntervalItem>()(intervals).sum(intervalSum)
 
     this.maxLevel = this.hierarchicalData.height
-    this.minIntervals = this.getMinIntervalAllLeveles(intervals)
-
-    this._minZoom = this._zoomWidth / (this._zoomWidth + padding.right + padding.left)
-    this._maxZoom = 10
 
     this.root = partition<IntervalItem>()
       .size([width, (height - opts.margin.bottom) * this.maxLevel])
@@ -134,7 +139,6 @@ export default class GeoTimeLine {
     
     this._canvas = document.createElement('canvas')
 
-    this.intervals = opts.intervals
     this._ready = false
 
     this._init()
@@ -146,8 +150,12 @@ export default class GeoTimeLine {
   }
 
   set time(val: number) {
-    if (this._setTime(val))
+    if (this._setTime(val)) {
       this._time = val
+      // force transition
+      this._level -=0.001
+      this._zoom.translateTo(this.svg, this._zoomedScale(this._scaleVal), 0)
+    }
   }
 
   /** get or set level */
@@ -159,32 +167,13 @@ export default class GeoTimeLine {
     let level = val
     if (val < this._minZoom) level = this._minZoom
     if (val > this._maxZoom) level = this._maxZoom
-    this._zoom.scaleTo(this.svg, level)
-  }
-
-  getMinIntervalAllLeveles(data: IntervalItem[]) {
-    const obj: {
-      [key: number]: number
-    } = {}
-    for (const item of data) {
-      const level = (item.level ?? 0)
-      const length = Math.abs(item.start - item.end)
-      if (!obj[level]) {
-        obj[level] = length
-      } else if (length < obj[level]) {
-        obj[level] = length
-      }
-    }
-    return obj
+    this._zoom.scaleTo(this.svg, level, [this._zoomedScale(this._scaleVal), 0])
   }
   
   private _init() {
     const self = this
-    const { width, height, margin, padding } = self._options
+    const { width, height, margin, padding } = self.options
     const svg = self.svg
-    const startTime = self.root.data.start
-    const endTime = self.root.data.end
-    const timeLength = startTime - endTime
 
     // draw cells
     self._cellGroup = svg
@@ -345,7 +334,7 @@ export default class GeoTimeLine {
       .append('g')
       .attr('id', 'tick')
     
-    const y = (this._zoomHeight - this._options.fontSize) * 0.8
+    const y = (this._zoomHeight - this.options.fontSize) * 0.8
 
     ticks
       .append("line")
@@ -359,7 +348,7 @@ export default class GeoTimeLine {
     ticks
       .append("text")
       .attr("x", 0)
-      .attr("y", y + this._options.fontSize)
+      .attr("y", y + this.options.fontSize)
       .attr("font-size", (d) => `${1 - 0.05 * d.data.level}em`)
       .text((d) => d.data.start + 'ma')
       .attr("text-anchor", d => d.data.start === this._startTime ? 'start' : 'middle')
@@ -382,7 +371,7 @@ export default class GeoTimeLine {
 
     let { k, x } = transform
 
-    const trans = transition().duration((this._level !== k && k > this._minZoom && k < this._maxZoom) ? this._options.transition : 0)
+    const trans = transition().duration((this._level !== k && k > this._minZoom && k < this._maxZoom) ? this.transition : 0)
 
     if (this._level !== k) {
       const scale = k * this._scaleRadio
@@ -395,7 +384,6 @@ export default class GeoTimeLine {
         const dataLevel = (d.data.level ?? 0)
         d.visible = (dataLevel === ~~k || ((d.children ?? []).length === 0 && dataLevel < k))
         
-        // if (this.minIntervals[~~k] && this.minIntervals[~~k] * scale)
       })
 
       this._rect
@@ -423,6 +411,17 @@ export default class GeoTimeLine {
           const x = (d.target.x0)
           return `translate(${x}, 0)`
         })
+      
+      this._ticks
+        .selectAll('text')
+        .transition(trans)
+        .attr('opacity', ((d: NodeItem) => {
+          const text = d.data.start + 'ma'
+          const rectWidth = Math.abs(d.target.x1 - d.target.x0);
+          const labelWidth = this._getTextWidth(text, this.font);
+
+          return rectWidth < labelWidth * (1 - 0.05 * d.data.level) ? 0 : 1;
+        }))
 
       this._cell
         .transition(trans)
@@ -435,10 +434,9 @@ export default class GeoTimeLine {
       }
     }
 
-    const { margin } = this._options
     this._cellGroup
       .transition(trans)
-      .attr('transform', `translate(${x}, ${margin.top})`)
+      .attr('transform', `translate(${x}, ${this._margin.top})`)
     
     this._zoomedScale = transform.rescaleX(this._xAxis);
 
@@ -468,7 +466,9 @@ export default class GeoTimeLine {
     const scaleX = xx / (this.root.target.x1 - this.root.target.x0) * this._timeLength
     const newx = this._zoomedScale(scaleX)
 
-    const bool = this._changeHandlePos(this._zoomedScale, this._handle, newx)
+    const trans = transition().duration(this.transition)
+    const bool = this._changeHandlePos(this._zoomedScale, this._handle, newx, trans)
+
     return bool
   }
 
@@ -486,7 +486,7 @@ export default class GeoTimeLine {
     
     handle
       .transition(trans ?? transition().duration(0))
-      .attr("transform", `translate(${x}, ${this._options.margin.top}), scale(${this._heightScale})`)
+      .attr("transform", `translate(${x}, ${this._margin.top}), scale(${this._heightScale})`)
     this._scaleVal = scaleX
 
     const handleX = scaleX * this._width / this._timeLength

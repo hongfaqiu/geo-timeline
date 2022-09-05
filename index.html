@@ -29,11 +29,14 @@
       </svg>
     </a>
   </h1>
-  <h2>Full width</h2>
+  <h2>Equal distance</h2>
   <h3>Time: <Input id="time" placeholder="0" /> Ma</h3>
   <h3>Level: <Input id="level" placeholder="0" /> </h3>
   
   <div id="geoTimeFullWidth"></div>
+
+  <h2>Unequal distance</h2>
+  <div id="unequal"></div>
 
   <h2>Custom width & height (500px by 100px)</h2>
   <div id="geoTimeSmall" style="width: 500px"></div>
@@ -42,17 +45,18 @@
   <script type="module">
     import GeoTimeLine from "./lib/index.module.js";
 
+    const TimeInput = document.getElementById('time')
+    const LevelInput = document.getElementById('level')
+
     const geoTimeLine = new GeoTimeLine("#geoTimeFullWidth", {
       time: 0,
       onChange: (time, level) => {
         console.log('time:', time, 'level:', level)
-        document.getElementById('time').value = +(+time).toFixed(6)
-        document.getElementById('level').value = +(+level).toFixed(6)
+        TimeInput.value = +(+time).toFixed(6)
+        LevelInput.value = +(+level).toFixed(6)
       }
     });
-
-    const TimeInput = document.getElementById('time')
-    const LevelInput = document.getElementById('level')
+    
     TimeInput.onchange = function changeTime() {
       geoTimeLine.time = this.value
     }
@@ -60,6 +64,10 @@
     LevelInput.onchange = function changeTime() {
       geoTimeLine.level = this.value
     }
+    new GeoTimeLine("#unequal", {
+      time: 0,
+      intervalSum: d => d.leaf ? d.start - d.end : 0
+    });
 
     new GeoTimeLine("#geoTimeSmall", { 
       width: 500, 
