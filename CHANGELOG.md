@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/hongfaqiu/geo-timeline/compare/v1.1.1...v1.2.0) (2022-09-05)
+
+
+### Features
+
+* set time ande level's animation ([9418d79](https://github.com/hongfaqiu/geo-timeline/commit/9418d790eae71662a5525ea6337cddf13c744985))
+
 ## [1.1.1](https://github.com/hongfaqiu/geo-timeline/compare/v1.1.0...v1.1.1) (2022-09-04)
 
 
