@@ -49,13 +49,15 @@
     const LevelInput = document.getElementById('level')
 
     const geoTimeLine = new GeoTimeLine("#geoTimeFullWidth", {
-      time: 0,
       onChange: (time, level) => {
         console.log('time:', time, 'level:', level)
         TimeInput.value = +(+time).toFixed(6)
         LevelInput.value = +(+level).toFixed(6)
       }
     });
+
+    geoTimeLine.level = 2
+    geoTimeLine.time = 2000
     
     TimeInput.onchange = function changeTime() {
       geoTimeLine.time = this.value
