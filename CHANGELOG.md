@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/hongfaqiu/geo-timeline/compare/v1.2.1...v1.3.0) (2022-09-05)
+
+
+### Features
+
+* add onAfterChange option ([40a55f2](https://github.com/hongfaqiu/geo-timeline/commit/40a55f2e1423e0d1bf704d376f6e19582ab19de4))
+
 ## [1.2.1](https://github.com/hongfaqiu/geo-timeline/compare/v1.2.0...v1.2.1) (2022-09-05)
 
 
