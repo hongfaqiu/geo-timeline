@@ -1,3 +1,4 @@
 import GeoTimeLine from "./GeoTimeLine";
+import GeoTimeScale from "./GeoTimeScale";
 
-export default GeoTimeLine
+export { GeoTimeLine, GeoTimeScale };

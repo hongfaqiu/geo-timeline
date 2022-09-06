@@ -39,10 +39,19 @@
   <div id="unequal"></div>
 
   <h2>Custom width & height (500px by 100px)</h2>
+
   <div id="geoTimeSmall" style="width: 500px"></div>
 
+  <h1>GeoTimeScale</h1>
+
+  <h2>Simplify geoTimeScale</h2>
+  <div id="geoTimeScale-simple"></div>
+
+  <h2>Complete geoTimeScale ( Equal distance )</h2>
+  <div id="geoTimeScale"></div>
+
   <script type="module">
-    import GeoTimeLine from "./lib/index.module.js";
+    import { GeoTimeLine, GeoTimeScale } from "./lib/index.module.js";
 
     const TimeInput = document.getElementById('time')
     const LevelInput = document.getElementById('level')
@@ -69,7 +78,8 @@
     }
     new GeoTimeLine("#unequal", {
       time: 0,
-      intervalSum: d => d.leaf ? d.start - d.end : 0
+      intervalSum: d => d.leaf ? d.start - d.end : 0,
+      maxZoom: 100
     });
 
     new GeoTimeLine("#geoTimeSmall", { 
@@ -77,7 +87,19 @@
       height: 100, 
       time: 2000 
     });
-  </script>
+
+    new GeoTimeScale("#geoTimeScale-simple", {
+      onChange: val => console.log(val),
+      simplify: true,
+      height: 70,
+    });
+
+    const geoTimeScale = new GeoTimeScale("#geoTimeScale", {
+      intervalSum: (d) => d.leaf ? 1 : 0,
+      tickLength: 30
+    });
+    geoTimeScale.stage = 'Cambrian'
+    </script>
 </body>
 
 </html>

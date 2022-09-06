@@ -1,6 +1,7 @@
 import intervals from './GTS_2020.json'
 import { D3DragEvent, drag, partition, pointer, stratify, Selection, ZoomTransform, select, scaleLinear, zoom as d3zoom, BaseType, transition, ScaleLinear, HierarchyNode, Transition, ZoomBehavior } from 'd3';
 import { GeoTimeLineOptions, IntervalItem, MarginOpts, NodeItem } from './typing';
+import { getTextWidth } from './helpers';
 
 const DefaultOpts: GeoTimeLineOptions = {
   width: 960,
@@ -38,7 +39,6 @@ export default class GeoTimeLine {
   readonly options: GeoTimeLineOptions
   private _width: number;
   private _height: number;
-  private _canvas: HTMLCanvasElement;
   private _time: number;
   private _timeLength: number;
   private _scaleRadio: number;
@@ -74,7 +74,7 @@ export default class GeoTimeLine {
    * Create a GeoTimeLine
    * @param selector CSS selector string
    * @param {number} [options.width] svg width, defaults to container's width
-   * @param {number} [options.height = 70] svg height, defaults to 100px
+   * @param {number} [options.height = 70] svg height, defaults to 70px
    * @param {number} [options.fontSize = 16] font size, defaults to 16px
    * @param {string} [options.fontFamily = 'sans-serif'] font family, defaults to 'sans-serif'
    * @param {Function} [options.onChange] callback when handle's position or scale level changed
@@ -147,8 +147,6 @@ export default class GeoTimeLine {
       .attr("viewBox", [0, 0, width, height])
       .style("font", this.font)
       .style("overflow", 'hidden')
-    
-    this._canvas = document.createElement('canvas')
 
     this._ready = false
 
@@ -320,15 +318,6 @@ export default class GeoTimeLine {
       .attr('fill', d => d.data.color)
   }
 
-  private _getTextWidth(text: string, font: string) {
-    // re-use canvas object for better performance
-    const context = this._canvas.getContext("2d");
-    context.font = font;
-    const metrics = context.measureText(text);
-
-    return metrics.width;
-  }
-
   /** draw text */
   private _drawText(cell: typeof this._cell) {
     const text = cell
@@ -405,13 +394,16 @@ export default class GeoTimeLine {
 
       this._text
         .transition(trans)
+        .attr("fill-opacity", (d) =>
+           d.x1 - d.x0 > 14 ? 1 : 0
+        )
         .attr("x", (d) => {
           const textX = (d.target.x0 + (d.target.x1 - d.target.x0) / 2);
           return Number.isNaN(textX) ? 0 : textX;
         })
         .text((d) => {
           const rectWidth = Math.abs(d.target.x1 - d.target.x0);
-          const labelWidth = this._getTextWidth(d.data.name, this.font);
+          const labelWidth = getTextWidth(d.data.name, this.font);
           const abbrev = d.data.abbr || d.data.name.charAt(0);
 
           return rectWidth - 10 < labelWidth ? abbrev : d.data.name;
@@ -419,18 +411,11 @@ export default class GeoTimeLine {
       
       this._ticks
         .transition(trans)
-        .attr("transform", (d) => {
-          const x = (d.target.x0)
-          return `translate(${x}, 0)`
-        })
-      
-      this._ticks
-        .selectAll('text')
-        .transition(trans)
+        .attr("transform", (d) => `translate(${d.target.x0}, 0)`)
         .attr('opacity', ((d: NodeItem) => {
           const text = d.data.start + 'ma'
           const rectWidth = Math.abs(d.target.x1 - d.target.x0);
-          const labelWidth = this._getTextWidth(text, this.font);
+          const labelWidth = getTextWidth(text, this.font);
 
           return rectWidth < labelWidth * (1 - 0.05 * d.data.level) ? 0 : 1;
         }))

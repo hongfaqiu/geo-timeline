@@ -1,4 +1,4 @@
-import { HierarchyRectangularNode } from "d3";
+import { HierarchyRectangularNode, ZoomTransform } from "d3";
 
 /** geo time data intervals schema **/
 export type IntervalItem = {
@@ -58,10 +58,51 @@ export interface GeoTimeLineOptions {
   maxZoom?: number;
 }
 
+export interface GeoTimeScaleOptions {
+  /** svg width, defaults to container's width */
+  width?: number;
+  /** svg height, defaults to 400px */
+  height?: number;
+  /** font size, defaults to 12px */
+  fontSize?: number;
+  /** font family, defaults to 'sans-serif' */
+  fontFamily?: string;
+  /** callback when handle's position or scale level changed */
+  onChange?: (node: NodeItem) => void;
+  /** geo time intervals array */
+  intervals?: IntervalItem[];
+  /** defaults to {
+    top: 0, right: 0, bottom: 0, left: 0,
+  } */
+  margin?: MarginOpts
+  /** defaults to {
+    top: 0, right: 0, bottom: 0, left: 0,
+  } */
+  padding?: MarginOpts
+  /** animation time, defaults to 450ms */
+  transition?: number;
+  /** interval transform setting, defaults to d => d.leaf ? d.start - d.end : 0 */
+  intervalSum?: (d: IntervalItem) => number;
+  /** show all levels or not, defaults to false */
+  simplify?: boolean;
+  /** focused node's neighbor node width, defaults to 100px */
+  neighborWidth?: number;
+  /** tick length, defaults to 15px */
+  tickLength?: number;
+}
+
 export type NodeItem = HierarchyRectangularNode<IntervalItem> & {
   target?: {
     x0: number;
-    x1: number
+    x1: number;
+    y0?: number;
+    y1?: number;
   }
   visible?: boolean
+}
+
+export type d3ZoomEvent = {
+  sourceEvent: WheelEvent | MouseEvent,
+  target: any;
+  transform: ZoomTransform;
 }
