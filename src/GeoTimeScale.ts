@@ -3,11 +3,9 @@ import { d3ZoomEvent, GeoTimeScaleOptions, IntervalItem, NodeItem } from './typi
 import { getTextWidth } from './helpers';
 
 const DefaultOpts: Partial<GeoTimeScaleOptions> = {
-  width: 960,
   height: 400,
   fontSize: 12,
   fontFamily: 'sans-serif',
-  onChange: undefined,
   margin: {
     top: 0, right: 0, bottom: 0, left: 0,
   },

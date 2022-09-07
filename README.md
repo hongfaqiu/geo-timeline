@@ -1,14 +1,14 @@
 # geo-timeline
 
-A D3.js(v7) based geologic timeline
+A D3.js(v7) based geologic timeline&timeScale
+
+![boundle size](https://img.shields.io/bundlephobia/min/@zjugis/geo-timeline) ![npm latest version](https://img.shields.io/npm/v/@zjugis/geo-timeline.svg)
 
 ![geo-timeline](img/geo-timeline.png)
 
 - ``Zoom:`` Use the mouse wheel to control zoom, double-click to zoom in.
 - ``Adjustment:`` Hold down the left button to drag the timeline.
 - ``Location:`` Left click the timeline to move the handler quickly, or drag to move the handler.
-
-A D3.js(v7) based geologic timescale
 
 ![geo-timescale-simple](img/geoTimeScale-simple.gif)
 

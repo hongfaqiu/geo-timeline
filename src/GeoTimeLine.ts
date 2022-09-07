@@ -3,11 +3,9 @@ import { GeoTimeLineOptions, IntervalItem, MarginOpts, NodeItem } from './typing
 import { getTextWidth } from './helpers';
 
 const DefaultOpts: Partial<GeoTimeLineOptions> = {
-  width: 960,
   height: 70,
   fontSize: 16,
   fontFamily: 'sans-serif',
-  onChange: undefined,
   margin: {
     top: 0, right: 0, bottom: 0, left: 0,
   },
