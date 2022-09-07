@@ -1,15 +1,13 @@
-import intervals from './GTS_2020.json'
 import { D3DragEvent, drag, partition, pointer, stratify, Selection, ZoomTransform, select, scaleLinear, zoom as d3zoom, BaseType, transition, ScaleLinear, HierarchyNode, Transition, ZoomBehavior } from 'd3';
 import { GeoTimeLineOptions, IntervalItem, MarginOpts, NodeItem } from './typing';
 import { getTextWidth } from './helpers';
 
-const DefaultOpts: GeoTimeLineOptions = {
+const DefaultOpts: Partial<GeoTimeLineOptions> = {
   width: 960,
   height: 70,
   fontSize: 16,
   fontFamily: 'sans-serif',
   onChange: undefined,
-  intervals: intervals,
   margin: {
     top: 0, right: 0, bottom: 0, left: 0,
   },
@@ -72,13 +70,13 @@ export default class GeoTimeLine {
 
   /**
    * Create a GeoTimeLine
-   * @param selector CSS selector string
+   * @param {string} selector CSS selector string
+   * @param {IntervalItem[]} intervals geo time intervals array
    * @param {number} [options.width] svg width, defaults to container's width
    * @param {number} [options.height = 70] svg height, defaults to 70px
    * @param {number} [options.fontSize = 16] font size, defaults to 16px
    * @param {string} [options.fontFamily = 'sans-serif'] font family, defaults to 'sans-serif'
    * @param {Function} [options.onChange] callback when handle's position or scale level changed
-   * @param {IntervalItem[]} [options.intervals] geo time intervals array
    * @param {Object} [options.margin] svg margin, defaults to { top: 0, right: 0, bottom: 0, left: 0 }
    * @param {Object} [options.padding] svg padding, defaults to { top: 0, right: 0, bottom: 0, left: 0 }
    * @param {number} [options.time = 0] initial time, defaults to 0
@@ -87,7 +85,11 @@ export default class GeoTimeLine {
    * @param {number} [options.minZoom] min zoom level
    * @param {number} [options.maxZoom = 10] min zoom level, defaults to 10
    */
-  constructor(selector: string, options: GeoTimeLineOptions = {}) {
+  constructor(selector: string, intervals: IntervalItem[], options: GeoTimeLineOptions = {}) {
+    if (!intervals?.length) {
+      throw Error('Empty intervals !')
+    }
+
     const opts: GeoTimeLineOptions = {
       ...DefaultOpts,
       margin: {
@@ -116,7 +118,7 @@ export default class GeoTimeLine {
     this.font = `${opts.fontSize}px ${opts.fontFamily}`
     this._minZoom = opts.minZoom = opts.minZoom ?? this._zoomWidth / (this._zoomWidth + padding.right + padding.left)
     this._maxZoom = opts.maxZoom
-    this.intervals = opts.intervals
+    this.intervals = intervals
 
     this.options = opts
     
@@ -397,7 +399,7 @@ export default class GeoTimeLine {
       this._text
         .transition(trans)
         .attr("fill-opacity", (d) =>
-           d.x1 - d.x0 > 14 ? 1 : 0
+           d.target.x1 - d.target.x0 > 14 ? 1 : 0
         )
         .attr("x", (d) => {
           const textX = (d.target.x0 + (d.target.x1 - d.target.x0) / 2);

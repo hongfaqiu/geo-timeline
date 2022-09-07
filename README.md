@@ -10,7 +10,7 @@ A D3.js(v7) based geologic timeline
 
 A D3.js(v7) based geologic timescale
 
-![geo-timeline](img/geo-timescale-simple.png)
+![geo-timescale-simple](img/geoTimeScale-simple.gif)
 
 - ``Location:`` Left click the geo stage to quick location.
 - ``Zoom:`` Use the mouse wheel to control zoom in or zoom out.
@@ -26,10 +26,20 @@ npm install --save @zjugis/geo-timeline
 yarn add @zjugis/geo-timeline
 ```
 
-Or in a browser
+For legacy environments, you can load @zjugis/geo-timeline’s UMD bundle from an npm-based CDN such as jsDelivr; a `timeLine` global is exported:
 
 ```html
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="//unpkg.com/@zjugis/geo-timeline@latest"></script>
+
+<script>
+  fetch('./test/GTS_2020.json').then(async res => {
+    const intervals = await res.json()
+
+    new timeLine.GeoTimeLine("#geoTimeLineContainer", intervals)
+    new timeLine.GeoTimeScale("#geoTimeScaleContainer", intervals)
+  })
+</script>
 ```
 
 ### Usage
@@ -39,35 +49,33 @@ For node.js
 ```ts
 import { GeoTimeLine, GeoTimeScale } from "@zjugis/geo-timeline";
 
-// create geotimeline obj
-const geoTimeLine = new GeoTimeLine("#geoTimeContainer", {
-  onChange: function(time, level) {
-    // do something
-  },
-  // determin interval by time
-  intervalSum: d => d.leaf ? d.start - d.end : 0
-});
+fetch('./test/GTS_2020.json').then(async res => {
+  const intervals = await res.json()
 
-// It is recommended to set the time after changing the level
-geoTimeLine.level = 2
-geoTimeLine.time = 2000
+  // create geotimeline obj
+  const geoTimeLine = new GeoTimeLine("#geoTimeContainer", intervals, {
+    onChange: function(time, level) {
+      // do something
+    },
+    // determin interval by time
+    intervalSum: d => d.leaf ? d.start - d.end : 0
+  });
 
-// create geotimescale obj
-const geoTimeScale = new GeoTimeScale("#geoTimeScale-simple", {
-  onChange: val => console.log(val),
-  // only show 2 levels once
-  simplify: true,
-  height: 70,
+  // It is recommended to set the time after changing the level
+  geoTimeLine.level = 2
+  geoTimeLine.time = 2000
+
+  // create geotimescale obj
+  const geoTimeScale = new GeoTimeScale("#geoTimeScale-simple", intervals, {
+    onChange: val => console.log(val),
+    // only show 2 levels once
+    simplify: true,
+    height: 70,
+  })
+  // set stage
+  geoTimeScale.stage = 'Cambrian'
 })
-// set stage
-geoTimeScale.stage = 'Cambrian'
-```
 
-Or in a browser
-
-```js
-new timeLine.GeoTimeLine("#geoTimeLineContainer");
-new timeLine.GeoTimeScale("#geoTimeScaleContainer");
 ```
 
 ### API
@@ -94,9 +102,10 @@ class GeoTimeLine {
     /** 
      * Create a GeoTimeLine
      * @param selector CSS selector string
+     * @param intervals geo time intervals array
      * @param options GeoTimeLine options
     */
-    constructor(selector: string, options?: GeoTimeLineOptions);
+    constructor(selector: string, intervals: IntervalItem[], options?: GeoTimeLineOptions);
 
     /** get or set time */
     get time(): number;
@@ -107,6 +116,8 @@ class GeoTimeLine {
 }
 
 interface GeoTimeLineOptions {
+    /** geo time intervals array */
+    intervals: IntervalItem[];
     /** svg width, defaults to container's width */
     width?: number;
     /** svg height, defaults to 70 */
@@ -119,8 +130,6 @@ interface GeoTimeLineOptions {
     onChange?: (time: number, level: number) => void;
     /** dispatch when mouseup or zoom  */
     onAfterChange?: (time: number, level: number) => void;
-    /** geo time intervals array */
-    intervals?: IntervalItem[];
     /** defaults to {
       top: 0, right: 0, bottom: 0, left: 0,
     } */
@@ -167,7 +176,7 @@ type IntervalItem = {
 
 ```
 
-#### GeoTimeScale 
+#### GeoTimeScale
 
 ```ts
 class GeoTimeLine {
@@ -185,7 +194,14 @@ class GeoTimeLine {
     readonly options: GeoTimeScaleOptions;
     /** get or set animation transition time */
     transition: number;
-    constructor(selector: string, options?: GeoTimeScaleOptions);
+    
+    /**
+     * Create a GeoTimeScale
+     * @param selector CSS selector string
+     * @param intervals geo time intervals array
+     * @param options GeoTimeScale options
+     */
+    constructor(selector: string, intervals: IntervalItem[], options?: GeoTimeScaleOptions);
     /** get or set focused stage
      * @example
      * geoTimeScale.stage = 'Cambrian'
@@ -195,6 +211,8 @@ class GeoTimeLine {
     get sequence(): NodeItem[];
 }
 interface GeoTimeScaleOptions {
+    /** geo time intervals array */
+    intervals: IntervalItem[];
     /** svg width, defaults to container's width */
     width?: number;
     /** svg height, defaults to 400px */
@@ -205,8 +223,6 @@ interface GeoTimeScaleOptions {
     fontFamily?: string;
     /** callback when handle's position or scale level changed */
     onChange?: (node: NodeItem) => void;
-    /** geo time intervals array */
-    intervals?: IntervalItem[];
     /** defaults to {
       top: 0, right: 0, bottom: 0, left: 0,
     } */
@@ -230,7 +246,7 @@ interface GeoTimeScaleOptions {
 
 ## Custom data
 
-The interval item's schema like follow:
+The [interval](./test/GTS_2020.json) item's schema like follow:
 
 ```json
 {
@@ -247,6 +263,13 @@ The interval item's schema like follow:
 ## Demo
 
 [Online demo](https://geo-timeline.vercel.app/)
+
+geoTimeLine
+![geo-timeLine](img/geoTimeLine.gif)
+
+geoTimeScale
+![geo-timescale-simple](img/geoTimeScale.gif)
+
 
 ## Develop
 

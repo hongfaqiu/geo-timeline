@@ -5,13 +5,13 @@
   "description": "A D3.js-based geologic time line",
   "type": "module",
   "source": "src/index.ts",
-  "exports": "./lib/index.modern.js",
-  "main": "./lib/index.cjs",
-  "module": "./lib/index.module.js",
-  "unpkg": "./lib/index.umd.js",
+  "exports": "./dist/index.modern.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.module.js",
+  "unpkg": "./dist/index.umd.js",
   "scripts": {
     "build": "microbundle --name timeLine",
-    "dev": "microbundle -f esm watch",
+    "dev": "microbundle --no-sourcemap --name timeLine -f umd watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -29,16 +29,18 @@
     "url": "https://github.com/hongfaqiu/geo-timeline/issues"
   },
   "homepage": "https://github.com/hongfaqiu/geo-timeline#readme",
+  "dependencies": {
+    "d3": "^7.6.1"
+  },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/git": "^10.0.1",
     "@types/d3": "^7.4.0",
-    "d3": "^7.6.1",
     "microbundle": "^0.15.1",
     "semantic-release": "^19.0.5"
   },
   "files": [
-    "lib",
+    "dist",
     "README.md"
   ]
 }

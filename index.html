@@ -29,10 +29,12 @@
       </svg>
     </a>
   </h1>
-  <h2>Equal distance</h2>
+  <h1>GeoTimeLine</h1>
+
   <h3>Time: <Input id="time" placeholder="0" /> Ma</h3>
   <h3>Level: <Input id="level" placeholder="0" /> </h3>
-  
+
+  <h2>Equal distance</h2>
   <div id="geoTimeFullWidth"></div>
 
   <h2>Unequal distance</h2>
@@ -43,6 +45,7 @@
   <div id="geoTimeSmall" style="width: 500px"></div>
 
   <h1>GeoTimeScale</h1>
+  <h3>Stage: <Input id="stage" placeholder="Geologic Time" /> </h3>
 
   <h2>Simplify geoTimeScale</h2>
   <div id="geoTimeScale-simple"></div>
@@ -50,56 +53,77 @@
   <h2>Complete geoTimeScale ( Equal distance )</h2>
   <div id="geoTimeScale"></div>
 
-  <script type="module">
-    import { GeoTimeLine, GeoTimeScale } from "./lib/index.module.js";
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="./dist/index.umd.js"></script>
 
-    const TimeInput = document.getElementById('time')
-    const LevelInput = document.getElementById('level')
+  <script>
+    fetch('./test/GTS_2020.json').then(async res => {
+      const intervals = await res.json()
+      const TimeInput = document.getElementById('time')
+      const LevelInput = document.getElementById('level')
+      const StageInput = document.getElementById('stage')
+  
+      // geotimeLine
+      const geoTimeLine1 = new timeLine.GeoTimeLine("#geoTimeFullWidth", intervals, {
+        onChange: (time, level) => {
+          TimeInput.value = +(+time).toFixed(6)
+          LevelInput.value = +(+level).toFixed(6)
+        },
+        onAfterChange: (time, level) => {
+          console.log('time:', time, 'level:', level)
+        }
+      })
+  
+      geoTimeLine1.level = 2
+      geoTimeLine1.time = 2000
 
-    const geoTimeLine = new GeoTimeLine("#geoTimeFullWidth", {
-      onChange: (time, level) => {
-        TimeInput.value = +(+time).toFixed(6)
-        LevelInput.value = +(+level).toFixed(6)
-      },
-      onAfterChange: (time, level) => {
-        console.log('time:', time, 'level:', level)
+      const geoTimeLine2 = new timeLine.GeoTimeLine("#unequal", intervals, {
+        time: 0,
+        intervalSum: d => d.leaf ? d.start - d.end : 0,
+        maxZoom: 100
+      });
+  
+      const geoTimeLine3 = new timeLine.GeoTimeLine("#geoTimeSmall", intervals, {
+        width: 500,
+        height: 100, 
+        time: 2000 
+      });
+
+      TimeInput.onchange = function changeTime() {
+        geoTimeLine1.time = this.value
+        geoTimeLine2.time = this.value
+        geoTimeLine3.time = this.value
       }
-    });
 
-    geoTimeLine.level = 2
-    geoTimeLine.time = 2000
-    
-    TimeInput.onchange = function changeTime() {
-      geoTimeLine.time = this.value
-    }
+      LevelInput.onchange = function changeTime() {
+        geoTimeLine1.level = this.value
+        geoTimeLine2.level = this.value
+        geoTimeLine3.level = this.value
+      }
+  
+      // geotimeScale
+      const geoTimeScale1 = new timeLine.GeoTimeScale("#geoTimeScale-simple", intervals, {
+        onChange: val => {
+          StageInput.value = val.data.name
+          console.log(val)
+        },
+        simplify: true,
+        height: 70,
+      });
+  
+      const geoTimeScale2 = new timeLine.GeoTimeScale("#geoTimeScale", intervals, {
+        intervalSum: (d) => d.leaf ? 1 : 0,
+        tickLength: 40,
+        unit: 'ma'
+      });
+      geoTimeScale2.stage = 'Cambrian'
 
-    LevelInput.onchange = function changeTime() {
-      geoTimeLine.level = this.value
-    }
-    new GeoTimeLine("#unequal", {
-      time: 0,
-      intervalSum: d => d.leaf ? d.start - d.end : 0,
-      maxZoom: 100
-    });
+      StageInput.onchange = function changeTime() {
+        geoTimeScale1.stage = this.value
+        geoTimeScale2.stage = this.value
+      }
 
-    new GeoTimeLine("#geoTimeSmall", { 
-      width: 500, 
-      height: 100, 
-      time: 2000 
-    });
-
-    new GeoTimeScale("#geoTimeScale-simple", {
-      onChange: val => console.log(val),
-      simplify: true,
-      height: 70,
-    });
-
-    const geoTimeScale = new GeoTimeScale("#geoTimeScale", {
-      intervalSum: (d) => d.leaf ? 1 : 0,
-      tickLength: 40,
-      unit: 'ma'
-    });
-    geoTimeScale.stage = 'Cambrian'
+    })
     </script>
 </body>
 

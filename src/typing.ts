@@ -34,8 +34,6 @@ export interface GeoTimeLineOptions {
   onChange?: (time: number, level: number) => void;
   /** dispatch when mouseup or zoom  */
   onAfterChange?: (time: number, level: number) => void;
-  /** geo time intervals array */
-  intervals?: IntervalItem[];
   /** defaults to {
     top: 0, right: 0, bottom: 0, left: 0,
   } */
@@ -69,8 +67,6 @@ export interface GeoTimeScaleOptions {
   fontFamily?: string;
   /** callback when handle's position or scale level changed */
   onChange?: (node: NodeItem) => void;
-  /** geo time intervals array */
-  intervals?: IntervalItem[];
   /** defaults to {
     top: 0, right: 0, bottom: 0, left: 0,
   } */
