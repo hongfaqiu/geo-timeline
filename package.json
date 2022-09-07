@@ -1,6 +1,6 @@
 {
   "name": "@zjugis/geo-timeline",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "packageManager": "pnpm@7.9.0",
   "description": "A D3.js-based geologic time line",
   "type": "module",
