@@ -192,8 +192,6 @@ class GeoTimeLine {
     readonly root: NodeItem;
     /** user input options */
     readonly options: GeoTimeScaleOptions;
-    /** get or set animation transition time */
-    transition: number;
     
     /**
      * Create a GeoTimeScale
@@ -202,6 +200,8 @@ class GeoTimeLine {
      * @param options GeoTimeScale options
      */
     constructor(selector: string, intervals: IntervalItem[], options?: GeoTimeScaleOptions);
+    /** get or set animation transition time */
+    transition: number;
     /** get or set focused stage
      * @example
      * geoTimeScale.stage = 'Cambrian'
@@ -210,6 +210,7 @@ class GeoTimeLine {
     set stage(val: string);
     get sequence(): NodeItem[];
 }
+
 interface GeoTimeScaleOptions {
     /** geo time intervals array */
     intervals: IntervalItem[];
