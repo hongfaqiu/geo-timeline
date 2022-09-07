@@ -1,5 +1,5 @@
 import intervals from './GTS_2020.json'
-import { partition, stratify, Selection, select, zoom as d3zoom, BaseType, transition, HierarchyNode } from 'd3';
+import { partition, stratify, Selection, select, zoom as d3zoom, BaseType, transition, HierarchyNode, Transition } from 'd3';
 import { d3ZoomEvent, GeoTimeScaleOptions, IntervalItem, NodeItem } from './typing';
 import { getTextWidth } from './helpers';
 
@@ -20,7 +20,8 @@ const DefaultOpts: GeoTimeScaleOptions = {
   intervalSum: d => d.leaf ? d.start - d.end : 0,
   simplify: false,
   neighborWidth: 100,
-  tickLength: 15
+  tickLength: 15,
+  unit: ''
 }
 
 export default class GeoTimeLine {
@@ -42,7 +43,6 @@ export default class GeoTimeLine {
   private _cell: Selection<SVGGElement | BaseType, NodeItem, SVGGElement, unknown>;
   private _rect: Selection<SVGRectElement, NodeItem, SVGGElement, unknown>;
   private _text: Selection<SVGTextElement, NodeItem, SVGGElement, unknown>;
-  private _ticks: Selection<SVGGElement, NodeItem, SVGGElement, unknown>;
   /** get or set animation transition time */
   transition: number;
   private _simplify: boolean;
@@ -50,6 +50,7 @@ export default class GeoTimeLine {
   private _sequence: NodeItem[];
   private _neighborWidth: number;
   private _tickLength: number;
+  private _ticksGroup: Selection<SVGGElement, unknown, HTMLElement, any>;
 
   /**
    * Create a GeoTimeLine
@@ -67,6 +68,7 @@ export default class GeoTimeLine {
    * @param {boolean} [options.simplify = true] show all levels or not, defaults to false
    * @param {number} [options.neighborWidth = 100] focused node's neighbor node width, defaults to 100px
    * @param {number} [options.tickLength = 15] tick length, defaults to 15px
+   * @param {string} [options.unit = ''] tick value unit
    */
   constructor(selector: string, options: GeoTimeScaleOptions = {}) {
     const opts: GeoTimeScaleOptions = {
@@ -93,10 +95,12 @@ export default class GeoTimeLine {
 
     this.options = opts
     
-    this.hierarchicalData = stratify<IntervalItem>()(intervals).sum(intervalSum)
+    this.hierarchicalData = stratify<IntervalItem>()(intervals)
+      .sum(intervalSum)
+      .sort((a, b) => b.data.start - a.data.start)
 
     this.root = partition<IntervalItem>()
-      .size([width, (height - opts.margin.bottom - opts.margin.top) * (simplify ? this.hierarchicalData.height / 2 : 1)])
+      .size([width, (height - opts.margin.bottom - opts.margin.top) * (simplify ? (this.hierarchicalData.height + 1) / 2 : 1)])
       .padding(0)(this.hierarchicalData)
       
     this.root.each(d => {
@@ -160,8 +164,10 @@ export default class GeoTimeLine {
 
     // draw text
     self._text = self._drawText(self._cell)
-    self._ticks = self._addTicks(self._cell)
-    
+    self._ticksGroup = svg
+      .append("g")
+      .attr("id", "ticks")
+
     // zoom function
     function zoomed(e: d3ZoomEvent) {
       const event = e.sourceEvent
@@ -223,7 +229,6 @@ export default class GeoTimeLine {
   private _drawRect(cell: typeof this._cell) {
     return cell
       .append("rect")
-      .attr("id", d => d.data.name)
       .attr('fill', d => d.data.color)
       .attr("stroke", "white")
       .attr("stroke-width", 0.5)
@@ -252,34 +257,102 @@ export default class GeoTimeLine {
     return text
   }
 
-  private _addTicks(cell: typeof this._cell) {
-    const ticks = cell
-      .append('g')
-      .attr('id', 'tick')
+  private _makeTicksData(focus: NodeItem) {
+    const ticksData = this.root.descendants()
+      .map((d) => {
+        let visible = d.visible
+        if (visible) {
+          if (d.parent?.visible && d.data.start === d.parent.data.start) {
+            visible = false
+          } else {
+            const text = d.data.start + this.options.unit
+            const rectWidth = d.target.x1 - d.target.x0
+            const labelWidth = getTextWidth(text, this.font)
+  
+            visible = rectWidth >= labelWidth * (1 - 0.05 * (d.data.level ?? 0))
+          }
+        }
 
-    ticks
-      .append("line")
-      .attr("stroke", "#555")
-      .attr("stroke-width", 1)
-      .attr("x1", 0)
-      .attr("y1", 0)
-      .attr("x2", 0)
-      .attr("y2", this._tickLength)
-    
-    ticks
-      .append("text")
-      .attr("x", 0)
-      .attr("y", this._tickLength + this.options.fontSize / 2)
-      .attr("font-size", (d) => `${1 - 0.05 * d.data.level}em`)
-      .text((d) => d.data.start + 'ma')
-      .attr("text-anchor", d => d.data.start === this.root.data.start ? 'start' : 'middle')
-      .clone(true)
-      .lower()
-      .attr("stroke-linejoin", "round")
-      .attr("stroke-width", 1)
-      .attr("stroke", "white")
-    
-    return ticks
+        return {
+          x: d.x0,
+          y: d.y0 - (this._simplify ? focus.y0 : 0),
+          depth: d.depth,
+          targetX: d?.target?.x0 || 0,
+          text: d.data.start + this.options.unit,
+          visible
+        }
+      })
+
+    const now = {
+      x: this.root.x1,
+      y: 0,
+      depth: 0,
+      targetX: this.root?.target?.x1 || this.options.width,
+      text: '0',
+      visible: true
+    }
+
+    ticksData.push(now)
+
+    return ticksData
+  }
+
+  private _addTicks(ticks: typeof this._ticksGroup, data: ReturnType<typeof this._makeTicksData>) {
+    ticks.selectAll("g")
+      .data(data)
+      .join(
+      // @ts-ignore
+        (enter) => {
+          const tick = enter
+            .append("g")
+            .attr("transform", (d) => `translate(${d.x}, ${d.y})`)
+            .attr("text-anchor", (d) =>
+              d.x === 0 ? "start" : d.x === this.options.width ? "end" : "middle"
+            )
+            .attr("opacity", (d) =>
+              d.visible ? 1 : 0
+            );
+
+          tick
+            .append("line")
+            .attr("stroke", "#555")
+            .attr("stroke-width", 1)
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", 0)
+            .attr(
+              "y2",
+              this._tickLength
+            );
+
+          tick
+            .append("text")
+            .attr("x", 0)
+            .attr(
+              "y",
+              this._tickLength + this.options.fontSize / 2
+            )
+            .attr("dominant-baseline", "middle")
+            .attr("font-size", (d) => `${1 - 0.05 * d.depth}em`)
+            .text((d) => d.text)
+            .clone(true)
+            .lower()
+            .attr("stroke-linejoin", "round")
+            .attr("stroke-width", 2)
+            .attr("stroke", "white");
+        },
+        (update) =>
+          update
+            .transition(transition().duration(this.options.transition))
+            .attr("opacity", (d) =>
+              d.visible ? 1 : 0
+            )
+            .attr("transform", (d) => `translate(${d.targetX}, ${d.y})`)
+            .attr("dominant-baseline", "hanging")
+            .attr("text-anchor", (d) =>
+              d.targetX === 0 ? "start" : d.targetX === this.options.width ? "end" : "middle"
+            )
+      );
   }
 
   /**
@@ -290,7 +363,7 @@ export default class GeoTimeLine {
     this._focus = focus;
 
     const focusAncestors = focus.ancestors().slice(1); // Ignore clicked node itself
-    const trans = event ? transition().duration(this.options.transition) : null; // Can't transition when using input, bit of a hack
+    const trans = transition().duration(this.options.transition)
 
     // Show a bit of the neighbouring cells on focus of an interval
     const leftNeighbor =
@@ -324,7 +397,7 @@ export default class GeoTimeLine {
     this._text
       .transition(trans)
       .attr("fill-opacity", (d) =>
-        focusAncestors.includes(d) ? 1 : +(d.x1 - d.x0 > 14)
+        focusAncestors.includes(d) ? 1 : +(d.target.x1 - d.target.x0 > 14)
       )
       .attr("x", (d) => {
         // Position all the ancestors labels in the middle
@@ -337,6 +410,8 @@ export default class GeoTimeLine {
       })
       .attr("y", (d) => (d.y1 - d.y0) / 2)
       .attr("opacity", d => d.visible ? 1 : 0)
+      .attr("font-size", (d) => d.id === focus.id ? this.options.fontSize + 6 : this.options.fontSize)
+      .attr("font-weight", (d) => d.id === focus.id ? 'bold' : 500)
       .text((d) => {
         const rectWidth = Math.abs(d.target.x1 - d.target.x0);
         const labelWidth = getTextWidth(d.data.name, this.font);
@@ -344,19 +419,8 @@ export default class GeoTimeLine {
 
         return rectWidth - 8 < labelWidth ? abbrev : d.data.name;
       })
-
-    this._ticks
-      .transition(trans)
-      .attr("transform", (d) => `translate(${d.target.x0}, 0)`)
-      .attr('opacity', d => {
-        // unique start
-        if (d.parent?.visible && d.data.start === d.parent.data.start) return 0
-        const text = d.data.start + 'ma'
-        const rectWidth = Math.abs(d.target.x1 - d.target.x0);
-        const labelWidth = getTextWidth(text, this.font);
-
-        return rectWidth < labelWidth * (1 - 0.05 * d.data.level) ? 0 : 1;
-      })
+    
+    this._ticksGroup.call((g) => this._addTicks(g, this._makeTicksData(focus)));
 
     if (this._simplify) {
       this._cell
@@ -367,12 +431,6 @@ export default class GeoTimeLine {
         .transition(trans)
         .attr("transform", `translate(0, ${!this._focus.children ? -(this._focus.parent?.y0 ?? 0) : -this._focus.target.y0})`)
     }
-
-    this._rect
-      .select(`#${focus.data.name}`)
-      .transition(trans)
-      .attr("stroke", "black")
-      .attr("stroke-width", 1.5)
     
     this._dispatchFunc(this._onChange)
 

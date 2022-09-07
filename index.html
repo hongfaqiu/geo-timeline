@@ -96,7 +96,8 @@
 
     const geoTimeScale = new GeoTimeScale("#geoTimeScale", {
       intervalSum: (d) => d.leaf ? 1 : 0,
-      tickLength: 30
+      tickLength: 40,
+      unit: 'ma'
     });
     geoTimeScale.stage = 'Cambrian'
     </script>

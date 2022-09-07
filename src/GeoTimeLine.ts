@@ -120,7 +120,9 @@ export default class GeoTimeLine {
 
     this.options = opts
     
-    this.hierarchicalData = stratify<IntervalItem>()(intervals).sum(intervalSum)
+    this.hierarchicalData = stratify<IntervalItem>()(intervals)
+      .sum(intervalSum)
+      .sort((a, b) => b.data.start - a.data.start)
 
     this.maxLevel = this.hierarchicalData.height
 

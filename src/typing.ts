@@ -89,6 +89,8 @@ export interface GeoTimeScaleOptions {
   neighborWidth?: number;
   /** tick length, defaults to 15px */
   tickLength?: number;
+  /** tick value unit */
+  unit?: string;
 }
 
 export type NodeItem = HierarchyRectangularNode<IntervalItem> & {
