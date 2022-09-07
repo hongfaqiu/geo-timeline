@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/hongfaqiu/geo-timeline/compare/v1.3.1...v1.4.0) (2022-09-06)
+
+
+### Features
+
+* add geotimeScale ([e4c6a0d](https://github.com/hongfaqiu/geo-timeline/commit/e4c6a0d9f940342dbdcf3b0c651e2c0b090c0d51))
+
 ## [1.3.1](https://github.com/hongfaqiu/geo-timeline/compare/v1.3.0...v1.3.1) (2022-09-05)
 
 
