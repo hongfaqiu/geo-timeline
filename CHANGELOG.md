@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/hongfaqiu/geo-timeline/compare/v1.4.1...v1.5.0) (2022-09-07)
+
+
+### Features
+
+* new constructor and smaller boundle size ([1986e8c](https://github.com/hongfaqiu/geo-timeline/commit/1986e8c05a80d32313a9473a59b167c5993d7614))
+
 ## [1.4.1](https://github.com/hongfaqiu/geo-timeline/compare/v1.4.0...v1.4.1) (2022-09-07)
 
 
