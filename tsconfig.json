@@ -1,11 +1,10 @@
 {
   "compilerOptions": {
-    "outDir": "build/dist",
+    "outDir": "./dist",
     "module": "esnext",
     "target": "esnext",
     "lib": ["esnext", "dom"],
     "sourceMap": true,
-    "baseUrl": ".",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
@@ -17,5 +16,9 @@
   "include": [
     "src/**/*",
   ],
-  "exclude": ["node_modules", "dist", "lib"]
+  "exclude": ["node_modules", "dist", "lib"],
+  "types": [
+    "mocha",
+    "node"
+  ]
 }

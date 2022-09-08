@@ -57,7 +57,7 @@
   <script src="./dist/index.umd.js"></script>
 
   <script>
-    fetch('./test/GTS_2020.json').then(async res => {
+    fetch('./assets/GTS_2020.json').then(async res => {
       const intervals = await res.json()
       const TimeInput = document.getElementById('time')
       const LevelInput = document.getElementById('level')
@@ -84,7 +84,6 @@
       });
   
       const geoTimeLine3 = new timeLine.GeoTimeLine("#geoTimeSmall", intervals, {
-        width: 500,
         height: 100, 
         time: 2000 
       });

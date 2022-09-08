@@ -1,7 +1,7 @@
 
-const canvas = document.createElement("canvas")
-
 export function getTextWidth(text: string, font: string) {
+  // @ts-ignore
+  const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
   // re-use canvas object for better performance
   const context = canvas.getContext("2d");
   context.font = font;

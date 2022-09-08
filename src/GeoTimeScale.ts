@@ -50,7 +50,7 @@ export default class GeoTimeLine {
 
   /**
    * Create a GeoTimeScale
-   * @param {string} selector CSS selector string
+   * @param {string | BaseType} selector CSS selector string
    * @param {IntervalItem[]} intervals geo time intervals array
    * @param {number} [options.width] svg width, defaults to container's width
    * @param {number} [options.height = 400] svg height, defaults to 400px
@@ -66,7 +66,11 @@ export default class GeoTimeLine {
    * @param {number} [options.tickLength = 15] tick length, defaults to 15px
    * @param {string} [options.unit = ''] tick value unit
    */
-  constructor(selector: string, intervals: IntervalItem[], options: GeoTimeScaleOptions = {}) {
+  constructor(selector: string | BaseType, intervals: IntervalItem[], options: GeoTimeScaleOptions = {}) {
+    const selection = select(selector as BaseType)
+    if (!selection.node()) {
+      throw Error('Invalid selecor!')
+    }
     if (!intervals?.length) {
       throw Error('Empty intervals !')
     }
@@ -81,7 +85,7 @@ export default class GeoTimeLine {
         ...DefaultOpts.padding,
         ...options.padding
       },
-      width: +select(selector).style('width').split('px')[0],
+      width: +selection.style('width').split('px')[0],
       ...options
     }
     const { width, height, intervalSum, onChange, transition, simplify, neighborWidth, tickLength } = opts
@@ -112,7 +116,7 @@ export default class GeoTimeLine {
     })
     this._sequence = []
 
-    this.svg = select(selector)
+    this.svg = selection
       .append("svg")
       .attr("viewBox", [0, 0, width, height])
       .style("font", this.font)
@@ -363,7 +367,7 @@ export default class GeoTimeLine {
     this._focus = focus;
 
     const focusAncestors = focus.ancestors().slice(1); // Ignore clicked node itself
-    const trans = transition().duration(this.options.transition)
+    const duration = this.transition
 
     // Show a bit of the neighbouring cells on focus of an interval
     const leftNeighbor =
@@ -387,7 +391,8 @@ export default class GeoTimeLine {
     })
 
     this._rect
-      .transition(trans)
+      .transition()
+      .duration(duration)
       .attr('x', d => (d.target.x0))
       .attr('width', d => (d.target.x1 - d.target.x0))
       .attr("height", (d) => (d.visible ? (d.y1 - d.y0) : 0))
@@ -395,7 +400,8 @@ export default class GeoTimeLine {
       .attr("stroke-width", 1);
 
     this._text
-      .transition(trans)
+      .transition()
+      .duration(duration)
       .attr("fill-opacity", (d) =>
         focusAncestors.includes(d) ? 1 : +(d.target.x1 - d.target.x0 > 14)
       )
@@ -424,11 +430,13 @@ export default class GeoTimeLine {
 
     if (this._simplify) {
       this._cell
-        .transition(trans)
+        .transition()
+        .duration(duration)
         .style('opacity', d => d.visible ? 1 : 0)
   
       this._cellGroup
-        .transition(trans)
+        .transition()
+        .duration(duration)
         .attr("transform", `translate(0, ${!this._focus.children ? -(this._focus.parent?.y0 ?? 0) : -this._focus.target.y0})`)
     }
     

@@ -2,7 +2,7 @@
 
 A D3.js(v7) based geologic timeline&timeScale
 
-![boundle size](https://img.shields.io/bundlephobia/min/@zjugis/geo-timeline) ![npm latest version](https://img.shields.io/npm/v/@zjugis/geo-timeline.svg)
+[![gzip size](http://img.badgesize.io/https://unpkg.com/@zjugis/geo-timeline?compression=gzip&label=gzip)](https://unpkg.com/@zjugis/geo-timeline) ![npm latest version](https://img.shields.io/npm/v/@zjugis/geo-timeline.svg) ![license](https://img.shields.io/npm/l/@zjugis/geo-timeline)
 
 ![geo-timeline](img/geo-timeline.png)
 
@@ -105,7 +105,7 @@ class GeoTimeLine {
      * @param intervals geo time intervals array
      * @param options GeoTimeLine options
     */
-    constructor(selector: string, intervals: IntervalItem[], options?: GeoTimeLineOptions);
+    constructor(selector: string | BaseType, intervals: IntervalItem[], options?: GeoTimeLineOptions);
 
     /** get or set time */
     get time(): number;
@@ -114,6 +114,13 @@ class GeoTimeLine {
     get level(): number;
     set level(val: number);
 }
+
+/**
+ * BaseType serves as an alias for the 'minimal' data type which can be selected
+ * without 'd3-selection' trying to use properties internally which would otherwise not
+ * be supported.
+ */
+type BaseType = Element | EnterElement | Document | Window | null;
 
 interface GeoTimeLineOptions {
     /** geo time intervals array */
@@ -199,7 +206,7 @@ class GeoTimeLine {
      * @param intervals geo time intervals array
      * @param options GeoTimeScale options
      */
-    constructor(selector: string, intervals: IntervalItem[], options?: GeoTimeScaleOptions);
+    constructor(selector: string | BaseType, intervals: IntervalItem[], options?: GeoTimeScaleOptions);
     /** get or set animation transition time */
     transition: number;
     /** get or set focused stage
@@ -270,7 +277,6 @@ geoTimeLine
 
 geoTimeScale
 ![geo-timescale-simple](img/geoTimeScale.gif)
-
 
 ## Develop
 

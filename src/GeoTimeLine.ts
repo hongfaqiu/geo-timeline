@@ -68,7 +68,7 @@ export default class GeoTimeLine {
 
   /**
    * Create a GeoTimeLine
-   * @param {string} selector CSS selector string
+   * @param {string | BaseType} selector CSS selector string
    * @param {IntervalItem[]} intervals geo time intervals array
    * @param {number} [options.width] svg width, defaults to container's width
    * @param {number} [options.height = 70] svg height, defaults to 70px
@@ -83,9 +83,13 @@ export default class GeoTimeLine {
    * @param {number} [options.minZoom] min zoom level
    * @param {number} [options.maxZoom = 10] min zoom level, defaults to 10
    */
-  constructor(selector: string, intervals: IntervalItem[], options: GeoTimeLineOptions = {}) {
+  constructor(selector: string | BaseType, intervals: IntervalItem[], options: GeoTimeLineOptions = {}) {
+    const selection = select(selector as BaseType)
+    if (!selection.node()) {
+      throw Error('Invalid selecor!')
+    }
     if (!intervals?.length) {
-      throw Error('Empty intervals !')
+      throw Error('Empty intervals!')
     }
 
     const opts: GeoTimeLineOptions = {
@@ -98,7 +102,7 @@ export default class GeoTimeLine {
         ...DefaultOpts.padding,
         ...options.padding
       },
-      width: +select(selector).style('width').split('px')[0],
+      width: +selection.style('width').split('px')[0],
       ...options
     }
     const { width, height, margin, padding, intervalSum, onChange, onAfterChange, time, transition } = opts
@@ -144,7 +148,7 @@ export default class GeoTimeLine {
     this._scaleRadio = this._width / (this.root.x1 - this.root.x0)
     this._scaleVal = this._getScaleXByTime(time)
 
-    this.svg = select(selector)
+    this.svg = selection
       .append("svg")
       .attr("viewBox", [0, 0, width, height])
       .style("font", this.font)
@@ -374,7 +378,7 @@ export default class GeoTimeLine {
     const { x } = transform
     const k = +transform.k.toFixed(6)
 
-    const trans = transition().duration((this._level !== k && k > this._minZoom && k < this._maxZoom) || this._forceTrans ? this.transition : 0)
+    const duration = (this._level !== k && k > this._minZoom && k < this._maxZoom) || this._forceTrans ? this.transition : 0
 
     if (this._level !== k) {
       const scale = k * this._scaleRadio
@@ -390,12 +394,14 @@ export default class GeoTimeLine {
       })
 
       this._rect
-        .transition(trans)
+        .transition()
+        .duration(duration)
         .attr('width', d => (d.target.x1 - d.target.x0))
         .attr('x', d => (d.target.x0))
 
       this._text
-        .transition(trans)
+        .transition()
+        .duration(duration)
         .attr("fill-opacity", (d) =>
            d.target.x1 - d.target.x0 > 14 ? 1 : 0
         )
@@ -412,7 +418,8 @@ export default class GeoTimeLine {
         });
       
       this._ticks
-        .transition(trans)
+        .transition()
+        .duration(duration)
         .attr("transform", (d) => `translate(${d.target.x0}, 0)`)
         .attr('opacity', ((d: NodeItem) => {
           const text = d.data.start + 'ma'
@@ -423,7 +430,8 @@ export default class GeoTimeLine {
         }))
 
       this._cell
-        .transition(trans)
+        .transition()
+        .duration(duration)
         .style('opacity', d => d.visible ? 1 : 0)
       
       this._level = k
@@ -434,12 +442,13 @@ export default class GeoTimeLine {
     }
 
     this._cellGroup
-      .transition(trans)
+      .transition()
+      .duration(duration)
       .attr('transform', `translate(${x}, ${this._margin.top})`)
     
     this._zoomedScale = transform.rescaleX(this._xAxis);
 
-    this._changeHandlePos(this._zoomedScale, this._handle, this._zoomedScale(this._scaleVal), trans)
+    this._changeHandlePos(this._zoomedScale, this._handle, this._zoomedScale(this._scaleVal), duration)
 
     return true
   }
@@ -466,8 +475,7 @@ export default class GeoTimeLine {
     const scaleX = this._getScaleXByTime(time)
     const newx = this._zoomedScale(scaleX)
 
-    const trans = transition().duration(this.transition)
-    const bool = this._changeHandlePos(this._zoomedScale, this._handle, newx, trans)
+    const bool = this._changeHandlePos(this._zoomedScale, this._handle, newx, this.transition)
 
     this._forceTrans = true
     this._zoom.translateTo(this.svg, scaleX / this._timeLength * this._width, 0)
@@ -483,13 +491,14 @@ export default class GeoTimeLine {
    * @param x mouse x position offset svg
    * @returns update success or not
    */
-  private _changeHandlePos(zoomedScale: ScaleLinear<number, number, never>, handle: Selection<SVGGElement, unknown, HTMLElement, any>, x: number, trans?: Transition<BaseType, unknown, null, undefined>): boolean {
+  private _changeHandlePos(zoomedScale: ScaleLinear<number, number, never>, handle: Selection<SVGGElement, unknown, HTMLElement, any>, x: number, trans?: number): boolean {
     let scaleX = zoomedScale.invert(x)
     if (scaleX < 0) scaleX = 0
     if (scaleX > this._timeLength) scaleX = this._timeLength
     
     handle
-      .transition(trans ?? transition().duration(0))
+      .transition()
+      .duration(trans ?? 0)
       .attr("transform", `translate(${x}, ${this._margin.top}), scale(${this._heightScale})`)
     this._scaleVal = scaleX
 
