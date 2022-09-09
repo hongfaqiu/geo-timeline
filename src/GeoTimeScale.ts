@@ -1,4 +1,4 @@
-import { partition, stratify, Selection, select, zoom as d3zoom, BaseType, transition, HierarchyNode, Transition } from 'd3';
+import { partition, stratify, Selection, select, zoom as d3zoom, BaseType, HierarchyNode } from 'd3';
 import { d3ZoomEvent, GeoTimeScaleOptions, IntervalItem, NodeItem } from './typing';
 import { getTextWidth, trans } from './helpers';
 
@@ -347,7 +347,7 @@ export default class GeoTimeLine {
             .attr("stroke", "white");
         },
         (update) =>
-          trans(update, this.options.transition)
+          trans(update, this.transition)
             .attr("opacity", (d) =>
               d.visible ? 1 : 0
             )
@@ -367,7 +367,7 @@ export default class GeoTimeLine {
     this._focus = focus;
 
     const focusAncestors = focus.ancestors().slice(1); // Ignore clicked node itself
-    const duration = this.transition
+    const duration = this._ready ? this.transition : 0 // initial without transition
 
     // Show a bit of the neighbouring cells on focus of an interval
     const leftNeighbor =

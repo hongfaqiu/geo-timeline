@@ -1,4 +1,4 @@
-import { D3DragEvent, drag, partition, pointer, stratify, Selection, ZoomTransform, select, scaleLinear, zoom as d3zoom, BaseType, transition, ScaleLinear, HierarchyNode, Transition, ZoomBehavior } from 'd3';
+import { D3DragEvent, drag, partition, pointer, stratify, Selection, ZoomTransform, select, scaleLinear, zoom as d3zoom, BaseType, ScaleLinear, HierarchyNode, ZoomBehavior } from 'd3';
 import { GeoTimeLineOptions, IntervalItem, MarginOpts, NodeItem } from './typing';
 import { getTextWidth, trans } from './helpers';
 
@@ -155,7 +155,6 @@ export default class GeoTimeLine {
       .style("overflow", 'hidden')
 
     this._ready = false
-
     this._init()
   }
 
@@ -270,7 +269,6 @@ export default class GeoTimeLine {
       self._changeHandlePos(self._zoomedScale, self._handle, x)
       self._dispatchFunc(self._onAfterChange)
     }
-
     this._ready = true
   }
 
@@ -382,8 +380,8 @@ export default class GeoTimeLine {
     const { x } = transform
     const k = +transform.k.toFixed(6)
 
-    const duration = (this._level !== k && k > this._minZoom && k < this._maxZoom) || this._forceTrans ? this.transition : 0
-
+    const duration = this._ready && ((this._level !== k && k > this._minZoom && k < this._maxZoom) || this._forceTrans) ? this.transition : 0
+    
     if (this._level !== k) {
       const scale = k * this._scaleRadio
 
