@@ -1,11 +1,12 @@
 import { expect } from 'chai';
+import fs from 'fs';
 
 import { GeoTimeScale } from '../src/index'
-import intervals from '../assets/GTS_2020.json'
 import { createDiv, injectDom } from './jsdom';
 
-describe('GeoTimeScale tests', () => {
+describe('GeoTimeScale tests', async () => {
   injectDom()
+  const intervals = JSON.parse(fs.readFileSync('assets/GTS_2020.json', 'utf-8'))
 
   const timeScale = new GeoTimeScale(createDiv(), intervals, {
     transition: 0
