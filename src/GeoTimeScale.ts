@@ -351,6 +351,9 @@ export default class GeoTimeLine {
             .attr("opacity", (d) =>
               d.visible ? 1 : 0
             )
+            .attr("display", (d) =>
+              d.visible ? 'block' : 'none'
+            )
             .attr("transform", (d) => `translate(${d.targetX}, ${d.y})`)
             .attr("dominant-baseline", "hanging")
             .attr("text-anchor", (d) =>
