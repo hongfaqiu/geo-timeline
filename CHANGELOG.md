@@ -1,3 +1,10 @@
+## [1.5.2](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.1...v1.5.2) (2022-09-09)
+
+
+### Bug Fixes
+
+* types missing ([6485d30](https://github.com/hongfaqiu/geo-timeline/commit/6485d3074bef8ffbd7faa793241fa4cb5b125014))
+
 ## [1.5.1](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.0...v1.5.1) (2022-09-09)
 
 
