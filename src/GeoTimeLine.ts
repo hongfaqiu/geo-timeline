@@ -1,6 +1,6 @@
 import { D3DragEvent, drag, partition, pointer, stratify, Selection, ZoomTransform, select, scaleLinear, zoom as d3zoom, BaseType, transition, ScaleLinear, HierarchyNode, Transition, ZoomBehavior } from 'd3';
 import { GeoTimeLineOptions, IntervalItem, MarginOpts, NodeItem } from './typing';
-import { getTextWidth } from './helpers';
+import { getTextWidth, trans } from './helpers';
 
 const DefaultOpts: Partial<GeoTimeLineOptions> = {
   height: 70,
@@ -180,6 +180,10 @@ export default class GeoTimeLine {
     if (val < this._minZoom) level = this._minZoom
     if (val > this._maxZoom) level = this._maxZoom
     this._zoom.scaleTo(this.svg, level, [this._zoomedScale(this._scaleVal), 0])
+  }
+
+  get ready(): boolean {
+    return this._ready
   }
   
   private _init() {
@@ -391,19 +395,15 @@ export default class GeoTimeLine {
         const dataLevel = (d.data.level ?? 0)
         d.visible = (dataLevel === ~~k || ((d.children ?? []).length === 0 && dataLevel < k))
         
-      })
+      });
 
-      this._rect
-        .transition()
-        .duration(duration)
+      trans(this._rect, duration)
         .attr('width', d => (d.target.x1 - d.target.x0))
-        .attr('x', d => (d.target.x0))
+        .attr('x', d => (d.target.x0));
 
-      this._text
-        .transition()
-        .duration(duration)
+      trans(this._text, duration)
         .attr("fill-opacity", (d) =>
-           d.target.x1 - d.target.x0 > 14 ? 1 : 0
+          d.target.x1 - d.target.x0 > 14 ? 1 : 0
         )
         .attr("x", (d) => {
           const textX = (d.target.x0 + (d.target.x1 - d.target.x0) / 2);
@@ -417,9 +417,7 @@ export default class GeoTimeLine {
           return rectWidth - 10 < labelWidth ? abbrev : d.data.name;
         });
       
-      this._ticks
-        .transition()
-        .duration(duration)
+      trans(this._ticks, duration)
         .attr("transform", (d) => `translate(${d.target.x0}, 0)`)
         .attr('opacity', ((d: NodeItem) => {
           const text = d.data.start + 'ma'
@@ -429,9 +427,7 @@ export default class GeoTimeLine {
           return rectWidth < labelWidth * (1 - 0.05 * d.data.level) ? 0 : 1;
         }))
 
-      this._cell
-        .transition()
-        .duration(duration)
+      trans(this._cell, duration)
         .style('opacity', d => d.visible ? 1 : 0)
       
       this._level = k
@@ -441,9 +437,7 @@ export default class GeoTimeLine {
 
     }
 
-    this._cellGroup
-      .transition()
-      .duration(duration)
+    trans(this._cellGroup, duration)
       .attr('transform', `translate(${x}, ${this._margin.top})`)
     
     this._zoomedScale = transform.rescaleX(this._xAxis);
@@ -491,14 +485,12 @@ export default class GeoTimeLine {
    * @param x mouse x position offset svg
    * @returns update success or not
    */
-  private _changeHandlePos(zoomedScale: ScaleLinear<number, number, never>, handle: Selection<SVGGElement, unknown, HTMLElement, any>, x: number, trans?: number): boolean {
+  private _changeHandlePos(zoomedScale: ScaleLinear<number, number, never>, handle: Selection<SVGGElement, unknown, HTMLElement, any>, x: number, duration?: number): boolean {
     let scaleX = zoomedScale.invert(x)
     if (scaleX < 0) scaleX = 0
-    if (scaleX > this._timeLength) scaleX = this._timeLength
+    if (scaleX > this._timeLength) scaleX = this._timeLength;
     
-    handle
-      .transition()
-      .duration(trans ?? 0)
+    trans(handle, duration)
       .attr("transform", `translate(${x}, ${this._margin.top}), scale(${this._heightScale})`)
     this._scaleVal = scaleX
 

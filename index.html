@@ -104,7 +104,7 @@
       const geoTimeScale1 = new timeLine.GeoTimeScale("#geoTimeScale-simple", intervals, {
         onChange: val => {
           StageInput.value = val.data.name
-          console.log(val)
+          console.log('node: ', val, 'sequence: ', geoTimeScale1.sequence )
         },
         simplify: true,
         height: 70,

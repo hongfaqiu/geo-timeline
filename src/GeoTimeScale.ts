@@ -1,6 +1,6 @@
 import { partition, stratify, Selection, select, zoom as d3zoom, BaseType, transition, HierarchyNode, Transition } from 'd3';
 import { d3ZoomEvent, GeoTimeScaleOptions, IntervalItem, NodeItem } from './typing';
-import { getTextWidth } from './helpers';
+import { getTextWidth, trans } from './helpers';
 
 const DefaultOpts: Partial<GeoTimeScaleOptions> = {
   height: 400,
@@ -114,7 +114,7 @@ export default class GeoTimeLine {
       }
       d.visible = true
     })
-    this._sequence = []
+    this._sequence = [this.root]
 
     this.svg = selection
       .append("svg")
@@ -145,6 +145,10 @@ export default class GeoTimeLine {
     return this._sequence
   }
 
+  get ready(): boolean {
+    return this._ready
+  }
+  
   private _init() {
     const self = this
     const svg = self.svg
@@ -204,7 +208,6 @@ export default class GeoTimeLine {
     
     svg.on("pointerleave", () => {
       this._cell.attr("fill-opacity", 1);
-      this._sequence = [];
     });
 
     this._ready = true
@@ -242,8 +245,6 @@ export default class GeoTimeLine {
         const sequence = d.ancestors().reverse();
         // Highlight the ancestors
         cell.attr("fill-opacity", (d) => (sequence.includes(d) ? 1.0 : 0.5));
-
-        this._sequence = sequence;
       })
   }
 
@@ -346,8 +347,7 @@ export default class GeoTimeLine {
             .attr("stroke", "white");
         },
         (update) =>
-          update
-            .transition(transition().duration(this.options.transition))
+          trans(update, this.options.transition)
             .attr("opacity", (d) =>
               d.visible ? 1 : 0
             )
@@ -390,18 +390,14 @@ export default class GeoTimeLine {
       }
     })
 
-    this._rect
-      .transition()
-      .duration(duration)
+    trans(this._rect, duration)
       .attr('x', d => (d.target.x0))
       .attr('width', d => (d.target.x1 - d.target.x0))
       .attr("height", (d) => (d.visible ? (d.y1 - d.y0) : 0))
       .attr("stroke", "white")
       .attr("stroke-width", 1);
 
-    this._text
-      .transition()
-      .duration(duration)
+    trans(this._text, duration)
       .attr("fill-opacity", (d) =>
         focusAncestors.includes(d) ? 1 : +(d.target.x1 - d.target.x0 > 14)
       )
@@ -429,17 +425,16 @@ export default class GeoTimeLine {
     this._ticksGroup.call((g) => this._addTicks(g, this._makeTicksData(focus)));
 
     if (this._simplify) {
-      this._cell
-        .transition()
-        .duration(duration)
+      trans(this._cell, duration)
         .style('opacity', d => d.visible ? 1 : 0)
   
-      this._cellGroup
-        .transition()
-        .duration(duration)
+      trans(this._cellGroup, duration)
         .attr("transform", `translate(0, ${!this._focus.children ? -(this._focus.parent?.y0 ?? 0) : -this._focus.target.y0})`)
     }
     
+    const sequence = focus.ancestors().reverse();
+    this._sequence = sequence;
+
     this._dispatchFunc(this._onChange)
 
     return true

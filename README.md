@@ -113,6 +113,7 @@ class GeoTimeLine {
     /** get or set level */
     get level(): number;
     set level(val: number);
+    get ready(): boolean;
 }
 
 /**
@@ -216,6 +217,7 @@ class GeoTimeLine {
     get stage(): string;
     set stage(val: string);
     get sequence(): NodeItem[];
+    get ready(): boolean;
 }
 
 interface GeoTimeScaleOptions {
@@ -283,10 +285,16 @@ geoTimeScale
 Run the command:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 And then Launch [index.html](index.html) with node server, if use VS Code, suggest the ``Live Server`` extension.
+
+Run test:
+
+```bash
+pnpm test
+```
 
 ## Credit
 

@@ -1,3 +1,4 @@
+import { Selection } from "d3";
 
 export function getTextWidth(text: string, font: string) {
   // @ts-ignore
@@ -8,4 +9,13 @@ export function getTextWidth(text: string, font: string) {
   const metrics = context.measureText(text);
 
   return metrics.width;
+}
+
+// temporary: avoid a crash due to starting a transition
+export function trans<T extends Selection<any, any, any, any>>(node: T, duration: number): T {
+  return duration ?
+    node
+      .transition()
+      .duration(duration) as unknown as T :
+    node
 }
