@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.0...v1.5.1) (2022-09-09)
+
+
+### Bug Fixes
+
+* get timeScale sequence ([31f68f6](https://github.com/hongfaqiu/geo-timeline/commit/31f68f6a054431a4b81a3c7e5c015320ff2004b1))
+
 # [1.5.0](https://github.com/hongfaqiu/geo-timeline/compare/v1.4.1...v1.5.0) (2022-09-07)
 
 
