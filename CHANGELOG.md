@@ -1,3 +1,10 @@
+## [1.5.3](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.2...v1.5.3) (2022-09-09)
+
+
+### Bug Fixes
+
+* initial without transition ([28316a7](https://github.com/hongfaqiu/geo-timeline/commit/28316a786fba7a269ec3ef28df330c622d2f5192))
+
 ## [1.5.2](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.1...v1.5.2) (2022-09-09)
 
 
