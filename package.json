@@ -9,6 +9,7 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.module.js",
   "unpkg": "./dist/index.umd.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "microbundle --name timeLine",
     "dev": "microbundle --no-sourcemap --name timeLine -f umd watch",

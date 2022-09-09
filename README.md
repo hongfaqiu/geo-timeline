@@ -2,14 +2,17 @@
 
 A D3.js(v7) based geologic timeline&timeScale
 
+
 [![gzip size](http://img.badgesize.io/https://unpkg.com/@zjugis/geo-timeline?compression=gzip&label=gzip)](https://unpkg.com/@zjugis/geo-timeline) ![npm latest version](https://img.shields.io/npm/v/@zjugis/geo-timeline.svg) ![license](https://img.shields.io/npm/l/@zjugis/geo-timeline)
 
+**timeLine:**
 ![geo-timeline](img/geo-timeline.png)
 
 - ``Zoom:`` Use the mouse wheel to control zoom, double-click to zoom in.
 - ``Adjustment:`` Hold down the left button to drag the timeline.
 - ``Location:`` Left click the timeline to move the handler quickly, or drag to move the handler.
 
+**timeScale:**
 ![geo-timescale-simple](img/geoTimeScale-simple.gif)
 
 - ``Location:`` Left click the geo stage to quick location.
@@ -274,10 +277,10 @@ The [interval](./test/GTS_2020.json) item's schema like follow:
 
 [Online demo](https://geo-timeline.vercel.app/)
 
-geoTimeLine
+**geoTimeLine**
 ![geo-timeLine](img/geoTimeLine.gif)
 
-geoTimeScale
+**geoTimeScale**
 ![geo-timescale-simple](img/geoTimeScale.gif)
 
 ## Develop
