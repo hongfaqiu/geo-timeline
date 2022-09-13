@@ -1,3 +1,10 @@
+## [1.5.5](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.4...v1.5.5) (2022-09-13)
+
+
+### Bug Fixes
+
+* type export ([387337c](https://github.com/hongfaqiu/geo-timeline/commit/387337cabbe2b7aabbc16c69cdd2668973b5106c))
+
 ## [1.5.4](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.3...v1.5.4) (2022-09-09)
 
 
