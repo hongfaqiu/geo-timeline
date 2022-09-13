@@ -1,3 +1,10 @@
+## [1.5.4](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.3...v1.5.4) (2022-09-09)
+
+
+### Bug Fixes
+
+* types(NodeItem) ([95fb98b](https://github.com/hongfaqiu/geo-timeline/commit/95fb98b88f55a42067669293596a0b8ac31969d3))
+
 ## [1.5.3](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.2...v1.5.3) (2022-09-09)
 
 
