@@ -61,7 +61,7 @@ export default class GeoTimeLine {
    * @param {Object} [options.padding] svg padding, defaults to { top: 0, right: 0, bottom: 0, left: 0 }
    * @param {number} [options.transition = 450] animation time, defaults to 450ms
    * @param {Function} [options.intervalSum] interval transform setting, defaults to d => d.leaf ? d.start - d.end : 0
-   * @param {boolean} [options.simplify = true] show all levels or not, defaults to false
+   * @param {boolean} [options.simplify = true] simplify show 2 levels or not
    * @param {number} [options.neighborWidth = 100] focused node's neighbor node width, defaults to 100px
    * @param {number} [options.tickLength = 15] tick length, defaults to 15px
    * @param {string} [options.unit = ''] tick value unit
@@ -266,8 +266,9 @@ export default class GeoTimeLine {
     const ticksData = this.root.descendants()
       .map((d) => {
         let visible = d.visible
+        const ifFocusBottom = (!focus.children && d.depth === focus.depth)
         if (visible) {
-          if (d.parent?.visible && d.data.start === d.parent.data.start) {
+          if (!ifFocusBottom && d.parent?.visible && d.data.start === d.parent.data.start) {
             visible = false
           } else {
             const text = d.data.start + this.options.unit
@@ -280,7 +281,7 @@ export default class GeoTimeLine {
 
         return {
           x: d.x0,
-          y: d.y0 - (this._simplify ? focus.y0 : 0),
+          y: d.y0 - (this._simplify ? (ifFocusBottom ? focus.parent.y0 : focus.y0) : 0),
           depth: d.depth,
           targetX: d?.target?.x0 || 0,
           text: d.data.start + this.options.unit,

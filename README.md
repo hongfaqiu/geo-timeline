@@ -248,7 +248,7 @@ interface GeoTimeScaleOptions {
     transition?: number;
     /** interval transform setting, defaults to d => d.leaf ? d.start - d.end : 0 */
     intervalSum?: (d: IntervalItem) => number;
-    /** show all levels or not, defaults to false */
+    /** simplify show 2 levels or not, defaults to false */
     simplify?: boolean;
     /** focused node's neighbor node width, defaults to 100px */
     neighborWidth?: number;
