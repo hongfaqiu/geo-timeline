@@ -1,3 +1,10 @@
+## [1.5.6](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.5...v1.5.6) (2022-09-13)
+
+
+### Bug Fixes
+
+* fix simplify timescale tick's visible ([a7f9085](https://github.com/hongfaqiu/geo-timeline/commit/a7f908588df62da487904f0402e84b6d7e2a7aec))
+
 ## [1.5.5](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.4...v1.5.5) (2022-09-13)
 
 
