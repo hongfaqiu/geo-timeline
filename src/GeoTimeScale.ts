@@ -358,7 +358,7 @@ export default class GeoTimeLine {
             .attr("transform", (d) => `translate(${d.targetX}, ${d.y})`)
             .attr("dominant-baseline", "hanging")
             .attr("text-anchor", (d) =>
-              d.targetX === 0 ? "start" : d.targetX === this.options.width ? "end" : "middle"
+              d.targetX === 0 ? "start" : d.targetX >= this.root.target.x1 ? "end" : "middle"
             )
       );
   }
