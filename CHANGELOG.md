@@ -1,3 +1,10 @@
+## [1.5.8](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.7...v1.5.8) (2022-09-16)
+
+
+### Bug Fixes
+
+* fix initial ticks display mode ([e5712f4](https://github.com/hongfaqiu/geo-timeline/commit/e5712f4e69032676d6dfe9d37832c43bfc7eed4f))
+
 ## [1.5.7](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.6...v1.5.7) (2022-09-14)
 
 
