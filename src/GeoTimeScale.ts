@@ -1,5 +1,5 @@
 import { partition, stratify, Selection, select, zoom as d3zoom, BaseType, HierarchyNode } from 'd3';
-import { d3ZoomEvent, GeoTimeScaleOptions, IntervalItem, NodeItem } from './typing';
+import { d3ZoomEvent, GeoTimeScaleOptions, IntervalItem, NodeItem, TickNode } from './typing';
 import { getTextWidth, trans } from './helpers';
 
 const DefaultOpts: Partial<GeoTimeScaleOptions> = {
@@ -262,7 +262,7 @@ export default class GeoTimeLine {
     return text
   }
 
-  private _makeTicksData(focus: NodeItem) {
+  private _makeTicksData(focus: NodeItem): TickNode[] {
     const ticksData = this.root.descendants()
       .map((d) => {
         let visible = d.visible
@@ -303,21 +303,25 @@ export default class GeoTimeLine {
     return ticksData
   }
 
-  private _addTicks(ticks: typeof this._ticksGroup, data: ReturnType<typeof this._makeTicksData>) {
+  private _updateTicks<T extends Selection<BaseType, TickNode, BaseType, unknown>>(node: T): T {
+    return node
+      .attr("opacity", (d) => d.visible ? 1 : 0)
+      .attr("display", (d) => d.visible ? 'block' : 'none')
+      .attr("transform", (d) => `translate(${d.targetX}, ${d.y})`)
+      .attr("dominant-baseline", "hanging")
+      .attr("text-anchor", (d) =>
+        d.targetX === 0 ? "start" : d.targetX >= this.root.target.x1 ? "end" : "middle"
+      )
+  }
+
+  private _addTicks(ticks: typeof this._ticksGroup, data: TickNode[]) {
     ticks.selectAll("g")
       .data(data)
       .join(
       // @ts-ignore
         (enter) => {
-          const tick = enter
-            .append("g")
-            .attr("transform", (d) => `translate(${d.x}, ${d.y})`)
-            .attr("text-anchor", (d) =>
-              d.x === 0 ? "start" : d.x === this.options.width ? "end" : "middle"
-            )
-            .attr("opacity", (d) =>
-              d.visible ? 1 : 0
-            );
+          const tick = enter.append("g")
+          this._updateTicks(tick)
 
           tick
             .append("line")
@@ -338,7 +342,6 @@ export default class GeoTimeLine {
               "y",
               this._tickLength + this.options.fontSize / 2
             )
-            .attr("dominant-baseline", "middle")
             .attr("font-size", (d) => `${1 - 0.05 * d.depth}em`)
             .text((d) => d.text)
             .clone(true)
@@ -347,19 +350,7 @@ export default class GeoTimeLine {
             .attr("stroke-width", 2)
             .attr("stroke", "white");
         },
-        (update) =>
-          trans(update, this.transition)
-            .attr("opacity", (d) =>
-              d.visible ? 1 : 0
-            )
-            .attr("display", (d) =>
-              d.visible ? 'block' : 'none'
-            )
-            .attr("transform", (d) => `translate(${d.targetX}, ${d.y})`)
-            .attr("dominant-baseline", "hanging")
-            .attr("text-anchor", (d) =>
-              d.targetX === 0 ? "start" : d.targetX >= this.root.target.x1 ? "end" : "middle"
-            )
+        (update) => this._updateTicks(trans(update, this.transition))
       );
   }
 

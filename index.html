@@ -111,7 +111,7 @@
       });
   
       const geoTimeScale2 = new timeLine.GeoTimeScale("#geoTimeScale", intervals, {
-        intervalSum: (d) => d.leaf ? 1 : 0,
+        intervalSum: d => d.leaf ? d.start - d.end : 0,
         tickLength: 40,
         unit: 'ma'
       });

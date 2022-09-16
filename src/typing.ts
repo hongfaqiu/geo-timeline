@@ -99,6 +99,15 @@ export type NodeItem = HierarchyRectangularNode<IntervalItem> & {
   visible?: boolean
 }
 
+export type TickNode = {
+  x: number;
+  y: number;
+  depth: number;
+  targetX: number;
+  text: string;
+  visible: boolean;
+}
+
 export type d3ZoomEvent = {
   sourceEvent: WheelEvent | MouseEvent,
   target: any;
