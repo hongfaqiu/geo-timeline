@@ -92,6 +92,7 @@ export default class GeoTimeLine {
       throw Error('Empty intervals!')
     }
 
+    const containerWidth = +selection.style('width').split('px')[0]
     const opts: GeoTimeLineOptions = {
       ...DefaultOpts,
       margin: {
@@ -102,7 +103,7 @@ export default class GeoTimeLine {
         ...DefaultOpts.padding,
         ...options.padding
       },
-      width: +selection.style('width').split('px')[0],
+      width: isNaN(containerWidth) ? 1000 : containerWidth,
       ...options
     }
     const { width, height, margin, padding, intervalSum, onChange, onAfterChange, time, transition } = opts
