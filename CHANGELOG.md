@@ -1,3 +1,10 @@
+## [1.5.9](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.8...v1.5.9) (2022-09-22)
+
+
+### Bug Fixes
+
+* initial width with 1000px ([aaf6c7e](https://github.com/hongfaqiu/geo-timeline/commit/aaf6c7e3fcc3ca5f78d8c090bd02d1cf1ce9946d))
+
 ## [1.5.8](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.7...v1.5.8) (2022-09-16)
 
 
