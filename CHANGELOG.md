@@ -1,3 +1,10 @@
+## [1.5.10](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.9...v1.5.10) (2022-11-07)
+
+
+### Bug Fixes
+
+* HierarchyNode type define ([5da25d3](https://github.com/hongfaqiu/geo-timeline/commit/5da25d357b6fc35e772117cfd079df21c7e4bd0b))
+
 ## [1.5.9](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.8...v1.5.9) (2022-09-22)
 
 
