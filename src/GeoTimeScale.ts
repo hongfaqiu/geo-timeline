@@ -1,5 +1,5 @@
-import { partition, stratify, Selection, select, zoom as d3zoom, BaseType, HierarchyNode } from 'd3';
-import { d3ZoomEvent, GeoTimeScaleOptions, IntervalItem, NodeItem, TickNode } from './typing';
+import { partition, stratify, Selection, select, zoom as d3zoom, BaseType } from 'd3';
+import { d3ZoomEvent, GeoTimeScaleOptions, HierarchyNode, IntervalItem, NodeItem, TickNode } from './typing';
 import { getTextWidth, trans } from './helpers';
 
 const DefaultOpts: Partial<GeoTimeScaleOptions> = {

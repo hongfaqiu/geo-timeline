@@ -1,5 +1,5 @@
-import { D3DragEvent, drag, partition, pointer, stratify, Selection, ZoomTransform, select, scaleLinear, zoom as d3zoom, BaseType, ScaleLinear, HierarchyNode, ZoomBehavior } from 'd3';
-import { GeoTimeLineOptions, IntervalItem, MarginOpts, NodeItem } from './typing';
+import { D3DragEvent, drag, partition, pointer, stratify, Selection, ZoomTransform, select, scaleLinear, zoom as d3zoom, BaseType, ScaleLinear, ZoomBehavior } from 'd3';
+import { GeoTimeLineOptions, HierarchyNode, IntervalItem, MarginOpts, NodeItem } from './typing';
 import { getTextWidth, trans } from './helpers';
 
 const DefaultOpts: Partial<GeoTimeLineOptions> = {
