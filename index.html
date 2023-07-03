@@ -24,6 +24,18 @@
       background-color: white;
       height: 40px;
     }
+    .version-meta {
+      display: flex;
+      gap: 20px;
+    }
+    #version-desc {
+      width: 500px;
+    }
+    br {
+      display: block;
+      content: "";
+      margin-top: 1em;
+    }
     #version-img {
       height: 400px;
       padding: 0 20px;
@@ -50,7 +62,10 @@
       <!-- Use JavaScript to create options -->
     </select>
   </h2>
-  <img id="version-img">
+  <div class="version-meta">
+    <img id="version-img">
+    <p id="version-desc"></p>
+  </div>
 
   <h1>GeoTimeLine</h1>
 
@@ -87,14 +102,18 @@
         const item = document.getElementById(id)
         if (item) item.innerHTML = ''
       })
+      document.getElementById("version-desc").innerHTML = ''
     }
 
     function url2geotime(selectedVersion) {
-      const { data, image, name } = selectedVersion;
+      const { data, image, desc, name } = selectedVersion;
       clearAll()
       const img = document.getElementById("version-img")
-      img.src = image;
-      img.alt = name
+      if (img) {
+        img.src = image;
+        img.alt = name
+      }
+      document.getElementById("version-desc").innerHTML = desc
       fetch(data).then(async res => {
         const intervals = await res.json()
         const TimeInput = document.getElementById('time')
