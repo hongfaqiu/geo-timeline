@@ -15,6 +15,19 @@
     a:hover {
       color: steelblue;
     }
+    .version-select-title {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      background-color: white;
+      height: 40px;
+    }
+    #version-img {
+      height: 400px;
+      padding: 0 20px;
+    }
   </style>
 </head>
 
@@ -29,6 +42,16 @@
       </svg>
     </a>
   </h1>
+
+
+  <h2 class="version-select-title">
+    Select a version: 
+    <select id="version-select">
+      <!-- Use JavaScript to create options -->
+    </select>
+  </h2>
+  <img id="version-img">
+
   <h1>GeoTimeLine</h1>
 
   <h3>Time: <Input id="time" placeholder="0" /> Ma</h3>
@@ -56,74 +79,114 @@
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="./dist/index.umd.js"></script>
 
-  <script>
-    fetch('./assets/GTS_2020.json').then(async res => {
-      const intervals = await res.json()
-      const TimeInput = document.getElementById('time')
-      const LevelInput = document.getElementById('level')
-      const StageInput = document.getElementById('stage')
-  
-      // geotimeLine
-      const geoTimeLine1 = new timeLine.GeoTimeLine("#geoTimeFullWidth", intervals, {
-        onChange: (time, level) => {
-          TimeInput.value = +(+time).toFixed(6)
-          LevelInput.value = +(+level).toFixed(6)
-        },
-        onAfterChange: (time, level) => {
-          console.log('time:', time, 'level:', level)
-        }
+  <script type="module">
+    import TimeScaleVersions from './timescales.js';
+
+    function clearAll() {
+      ["geoTimeFullWidth", "unequal", "geoTimeSmall", "geoTimeScale-simple", "geoTimeScale"].map(id => {
+        const item = document.getElementById(id)
+        if (item) item.innerHTML = ''
       })
-  
-      geoTimeLine1.level = 2
-      geoTimeLine1.time = 2000
+    }
 
-      const geoTimeLine2 = new timeLine.GeoTimeLine("#unequal", intervals, {
-        time: 0,
-        intervalSum: d => d.leaf ? d.start - d.end : 0,
-        maxZoom: 100
-      });
-  
-      const geoTimeLine3 = new timeLine.GeoTimeLine("#geoTimeSmall", intervals, {
-        height: 100, 
-        time: 2000 
-      });
+    function url2geotime(selectedVersion) {
+      const { data, image, name } = selectedVersion;
+      clearAll()
+      const img = document.getElementById("version-img")
+      img.src = image;
+      img.alt = name
+      fetch(data).then(async res => {
+        const intervals = await res.json()
+        const TimeInput = document.getElementById('time')
+        const LevelInput = document.getElementById('level')
+        const StageInput = document.getElementById('stage')
 
-      TimeInput.onchange = function changeTime() {
-        geoTimeLine1.time = this.value
-        geoTimeLine2.time = this.value
-        geoTimeLine3.time = this.value
+        // geotimeLine
+        const geoTimeLine1 = new timeLine.GeoTimeLine("#geoTimeFullWidth", intervals, {
+          onChange: (time, level) => {
+            TimeInput.value = +(+time).toFixed(6)
+            LevelInput.value = +(+level).toFixed(6)
+          },
+          onAfterChange: (time, level) => {
+            console.log('time:', time, 'level:', level)
+          }
+        })
+    
+        geoTimeLine1.level = 2
+        geoTimeLine1.time = 2000
+  
+        const geoTimeLine2 = new timeLine.GeoTimeLine("#unequal", intervals, {
+          time: 0,
+          intervalSum: d => d.leaf ? d.start - d.end : 0,
+          maxZoom: 100
+        });
+    
+        const geoTimeLine3 = new timeLine.GeoTimeLine("#geoTimeSmall", intervals, {
+          height: 100, 
+          time: 2000 
+        });
+  
+        TimeInput.onchange = function changeTime() {
+          geoTimeLine1.time = this.value
+          geoTimeLine2.time = this.value
+          geoTimeLine3.time = this.value
+        }
+  
+        LevelInput.onchange = function changeTime() {
+          geoTimeLine1.level = this.value
+          geoTimeLine2.level = this.value
+          geoTimeLine3.level = this.value
+        }
+    
+        // geotimeScale
+        const geoTimeScale1 = new timeLine.GeoTimeScale("#geoTimeScale-simple", intervals, {
+          onChange: val => {
+            StageInput.value = val.data.name
+            console.log('node: ', val, 'sequence: ', geoTimeScale1.sequence )
+          },
+          simplify: true,
+          height: 70,
+        });
+    
+        const geoTimeScale2 = new timeLine.GeoTimeScale("#geoTimeScale", intervals, {
+          intervalSum: d => d.leaf ? d.start - d.end : 0,
+          tickLength: 40,
+          unit: 'ma'
+        });
+        geoTimeScale2.stage = 'Cambrian'
+  
+        StageInput.onchange = function changeTime() {
+          geoTimeScale1.stage = this.value
+          geoTimeScale2.stage = this.value
+        }
+  
+      })
+    }
+
+    // Create options for the select element
+    const versionSelect = document.getElementById("version-select");
+    TimeScaleVersions.map(version => {
+      const option = document.createElement("option");
+      option.value = version.name;
+      option.text = version.name;
+      if (version.image) {
+        const image = document.createElement("img");
+        image.src = version.image;
+        image.alt = version.name + " image";
+        option.prepend(image);
       }
+      versionSelect.appendChild(option);
+    });
 
-      LevelInput.onchange = function changeTime() {
-        geoTimeLine1.level = this.value
-        geoTimeLine2.level = this.value
-        geoTimeLine3.level = this.value
-      }
-  
-      // geotimeScale
-      const geoTimeScale1 = new timeLine.GeoTimeScale("#geoTimeScale-simple", intervals, {
-        onChange: val => {
-          StageInput.value = val.data.name
-          console.log('node: ', val, 'sequence: ', geoTimeScale1.sequence )
-        },
-        simplify: true,
-        height: 70,
-      });
-  
-      const geoTimeScale2 = new timeLine.GeoTimeScale("#geoTimeScale", intervals, {
-        intervalSum: d => d.leaf ? d.start - d.end : 0,
-        tickLength: 40,
-        unit: 'ma'
-      });
-      geoTimeScale2.stage = 'Cambrian'
+    url2geotime(TimeScaleVersions[0])
 
-      StageInput.onchange = function changeTime() {
-        geoTimeScale1.stage = this.value
-        geoTimeScale2.stage = this.value
-      }
+    versionSelect.onchange = function() {
+      const selectedValue = this.value;
+      const selectedVersion = TimeScaleVersions.find(version => version.name === selectedValue);
+      url2geotime(selectedVersion)
+    };
+  </script>
 
-    })
-    </script>
 </body>
 
 </html>
