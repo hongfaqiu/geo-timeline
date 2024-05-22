@@ -89,6 +89,51 @@ export interface GeoTimeScaleOptions {
   unit?: string;
 }
 
+export interface GeoTimeSliderOptions {
+  /** svg width, defaults to container's width */
+  width?: number;
+  /** svg height, defaults to 400px */
+  height?: number;
+  /** font size, defaults to 12px */
+  fontSize?: number;
+  /** font family, defaults to 'sans-serif' */
+  fontFamily?: string;
+  /** callback when handle's position or scale level changed */
+  onChange?: (timeRange: number[]) => void;
+  /** defaults to {
+    top: 0, right: 0, bottom: 0, left: 0,
+  } */
+  margin?: MarginOpts;
+  /** defaults to {
+    top: 0, right: 0, bottom: 0, left: 0,
+  } */
+  padding?: MarginOpts;
+  /** animation time, defaults to 100ms */
+  transition?: number;
+  /** interval transform setting, defaults to d => d.leaf ? d.start - d.end : 0 */
+  intervalSum?: (d: IntervalItem) => number;
+  /** focused node's neighbor node width, defaults to 100px */
+  neighborWidth?: number;
+  /** tick length, defaults to 15px */
+  tickLength?: number;
+  /** tick height, defaults to 30px */
+  tickHeight?: number;
+  /** tick value unit */
+  unit?: string;
+}
+
+export type SliderNodeItem = HierarchyRectangularNode<IntervalItem> & {
+  visible?: boolean;
+};
+
+export type SliderTickNode = {
+  x: number;
+  y: number;
+  depth: number;
+  text: string;
+  visible: boolean;
+}
+
 export type NodeItem = HierarchyRectangularNode<IntervalItem> & {
   target?: {
     x0: number;
@@ -99,13 +144,8 @@ export type NodeItem = HierarchyRectangularNode<IntervalItem> & {
   visible?: boolean
 }
 
-export type TickNode = {
-  x: number;
-  y: number;
-  depth: number;
+export type TickNode = SliderTickNode & {
   targetX: number;
-  text: string;
-  visible: boolean;
 }
 
 export type d3ZoomEvent = {

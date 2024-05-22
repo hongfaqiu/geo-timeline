@@ -91,6 +91,10 @@
   <h2>Complete geoTimeScale ( Equal distance )</h2>
   <div id="geoTimeScale"></div>
 
+  <h1>GeoTimeSlider</h1>
+  <div id="geoTimeSlider"></div>
+
+
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="./dist/index.umd.js"></script>
 
@@ -98,7 +102,7 @@
     import TimeScaleVersions from './timescales.js';
 
     function clearAll() {
-      ["geoTimeFullWidth", "unequal", "geoTimeSmall", "geoTimeScale-simple", "geoTimeScale"].map(id => {
+      ["geoTimeFullWidth", "unequal", "geoTimeSmall", "geoTimeScale-simple", "geoTimeScale", "geoTimeSlider"].map(id => {
         const item = document.getElementById(id)
         if (item) item.innerHTML = ''
       })
@@ -178,6 +182,13 @@
           geoTimeScale1.stage = this.value
           geoTimeScale2.stage = this.value
         }
+
+        // geotimeSlider
+        const geoTimeSlider = new timeLine.GeoTimeSlider("#geoTimeSlider", intervals, {
+          onChange: (val) => {
+            console.log(val);
+          }
+        })
   
       })
     }

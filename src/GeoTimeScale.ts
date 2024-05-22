@@ -20,7 +20,7 @@ const DefaultOpts: Partial<GeoTimeScaleOptions> = {
   unit: ''
 }
 
-export default class GeoTimeLine {
+export default class GeoTimeScale {
   /** text font */
   readonly font: string;
   /** svg object */
