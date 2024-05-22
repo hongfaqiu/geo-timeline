@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.10...v1.6.0) (2024-05-22)
+
+
+### Features
+
+* geoTimeSlider ([5878021](https://github.com/hongfaqiu/geo-timeline/commit/58780214643b42491b2409d10735ddb32ecdaa69))
+
 ## [1.5.10](https://github.com/hongfaqiu/geo-timeline/compare/v1.5.9...v1.5.10) (2022-11-07)
 
 
