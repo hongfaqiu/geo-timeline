@@ -47,7 +47,7 @@ For legacy environments, you can load @zjugis/geo-timeline’s UMD bundle from a
 
     new timeLine.GeoTimeLine("#geoTimeLineContainer", intervals)
     new timeLine.GeoTimeScale("#geoTimeScaleContainer", intervals)
-    new timeLine.GeoTimeScale("#geoTimeSliderContainer", intervals)
+    new timeLine.GeoTimeSlider("#geoTimeSliderContainer", intervals)
   })
 </script>
 ```
@@ -343,7 +343,7 @@ interface GeoTimeSliderOptions {
       top: 0, right: 0, bottom: 0, left: 0,
     } */
     padding?: MarginOpts;
-    /** animation time, defaults to 100ms */
+    /** animation time, defaults to 300ms */
     transition?: number;
     /** interval transform setting, defaults to d => d.leaf ? d.start - d.end : 0 */
     intervalSum?: (d: IntervalItem) => number;
